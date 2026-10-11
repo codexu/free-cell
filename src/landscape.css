@@ -1,0 +1,82 @@
+/* The sidebar shares the left safe area; the table owns the full height. */
+.app.landscape-layout {
+  /* Never let a stale native zero suppress WebKit's own safe-area inset.
+     Keep both sides clear, even before rotation has updated native geometry. */
+  --landscape-side-safe:max(var(--landscape-side-min,0px),var(--device-cutout-inset,0px),var(--native-safe-left,0px),var(--native-safe-right,0px),env(safe-area-inset-left,0px),env(safe-area-inset-right,0px));
+  --landscape-top-safe:max(var(--native-safe-top,0px),env(safe-area-inset-top,0px));
+  --landscape-bottom-safe:max(var(--native-safe-bottom,0px),env(safe-area-inset-bottom,0px));
+  position:fixed;inset:0;max-width:none;min-height:0;
+  width:100%;height:var(--landscape-height,100dvh);overflow:hidden;
+  display:grid;grid-template-columns:132px minmax(0,1fr);
+  --control-button-height:clamp(36px,calc(var(--landscape-height) * .105),44px);grid-template-rows:auto minmax(0,1fr);
+  column-gap:14px;
+  padding:max(12px,var(--landscape-top-safe))
+    calc(12px + var(--landscape-side-safe))
+    max(12px,var(--landscape-bottom-safe))
+    calc(12px + var(--landscape-side-safe));
+}
+.app.landscape-rotated {
+  inset:auto;top:0;left:100%;margin:0;
+  width:var(--landscape-width);height:var(--landscape-height);
+  transform-origin:top left;transform:rotate(90deg);
+  /* Map physical safe areas into the rotated app's logical edges. */
+  --landscape-side-safe:max(var(--landscape-side-min,0px),var(--device-cutout-inset,0px),var(--native-safe-top,0px),var(--native-safe-bottom,0px),env(safe-area-inset-top,0px),env(safe-area-inset-bottom,0px));
+  --landscape-top-safe:max(var(--native-safe-right,0px),env(safe-area-inset-right,0px));
+  --landscape-bottom-safe:max(var(--native-safe-left,0px),env(safe-area-inset-left,0px));
+}
+.landscape-layout .header {grid-column:1;grid-row:1;display:flex;flex-direction:column;align-items:stretch;gap:6px;border:0;padding:0 0 10px;min-width:0}
+.landscape-layout .player-profile {flex:none;gap:6px;width:100%}
+.landscape-layout .player-profile>.badge-emblem {width:28px;height:32px;flex-shrink:0}
+.landscape-layout .player-details {width:auto;flex:1;gap:3px}
+.landscape-layout .player-title {gap:4px}
+.landscape-layout .player-title b {font-size:10px}
+.landscape-layout .player-title>span {font-size:9px}
+.landscape-layout .player-details>small {display:none}
+.landscape-layout .player-xp-track {height:3px}
+.landscape-layout .mobile-meta {display:grid;grid-template-columns:1fr 1fr;align-items:center;gap:4px;margin:0;width:100%;font:11px ui-monospace,SFMono-Regular,monospace;font-variant-numeric:tabular-nums;color:#d4ddc7}
+.landscape-layout .mobile-meta button {padding:5px 0}
+.landscape-layout .mobile-deal {grid-column:1 / -1;flex-direction:row;justify-content:center;gap:6px}
+.landscape-layout .header-actions {display:none}
+.landscape-layout .header-actions .icon-button {width:32px;height:32px;border-color:#cadbb32b}
+.landscape-layout .header .daily-button {display:grid}
+.landscape-layout .game-meta {display:none}
+.app.landscape-layout .table.pixi-table {grid-column:2;grid-row:1 / -1;min-height:0;min-width:0;width:100%;height:100%;align-self:stretch}
+.landscape-layout .footer {grid-column:1;grid-row:2;display:flex;flex-direction:column;min-height:0;padding:0;overflow-y:auto;scrollbar-width:none}
+.landscape-layout .footer::-webkit-scrollbar {display:none}
+.landscape-layout .toolbar {order:0;display:grid;grid-template-columns:1fr 1fr;width:100%;max-width:none;margin:0;padding:4px;gap:4px;border-radius:10px;box-shadow:none;flex-shrink:0}
+.landscape-layout .tool-button,.landscape-layout .toolbar .new-button {display:flex;flex:none;flex-direction:row;justify-content:center;align-items:center;min-width:0;min-height:var(--control-button-height);padding:8px 2px;gap:5px;font-size:10px;white-space:nowrap}
+.landscape-layout .toolbar .new-button {grid-column:auto;min-height:40px}
+.landscape-layout .toolbar .secondary-tool {display:none}
+.landscape-layout .tool-button svg,.landscape-layout .new-button svg {width:16px;height:16px}
+.landscape-layout .toolbar-divider {display:none}
+.landscape-layout .status-line {order:2;margin-top:6px;flex:0 1 48px;min-height:0;height:48px;padding:4px 2px;align-items:flex-start;font-size:10px;line-height:1.6;text-align:left;justify-content:flex-start;overflow-y:auto}
+.landscape-layout .status-line>span:last-child {display:block;white-space:normal;overflow-wrap:anywhere;min-width:0}
+.landscape-layout .status-line .status-dot {display:none}
+.landscape-layout .footer .board-notice,.landscape-layout .finish-notice {display:none}
+.landscape-layout .bottom-meta {order:1;display:flex;gap:5px;margin:8px 0 0;font-size:9px}
+.landscape-layout .bottom-meta>span:first-child {display:none}
+.landscape-layout .progress {width:auto;flex:1}
+.landscape-layout .menu-list .mobile-menu-action {display:flex}
+.landscape-layout .modal-backdrop {padding:12px;overflow:hidden}
+.landscape-layout .modal {max-height:100%;padding:26px 24px;overscroll-behavior:contain}
+@media(max-height:360px) {
+  .landscape-layout .header {gap:4px;padding-bottom:4px}
+  .landscape-layout .tool-button,.landscape-layout .toolbar .new-button {min-height:36px;padding-top:6px;padding-bottom:6px}
+}
+.landscape-layout .modal-backdrop {
+  padding:max(12px,var(--landscape-top-safe))
+    calc(12px + var(--landscape-side-safe))
+    max(12px,var(--landscape-bottom-safe))
+    calc(12px + var(--landscape-side-safe));
+}
+
+/* Fullscreen removes status/navigation bar reservations. Keep actual cutouts
+   and the symmetric horizontal notch gutter, not the home-indicator padding. */
+.app.native-landscape-fullscreen {
+  --landscape-top-safe:var(--native-cutout-top,0px);
+  --landscape-bottom-safe:var(--native-cutout-bottom,0px);
+}
+.app.landscape-rotated.native-landscape-fullscreen {
+  --landscape-top-safe:var(--native-cutout-right,0px);
+  --landscape-bottom-safe:var(--native-cutout-left,0px);
+}

@@ -1,0 +1,88 @@
+:root {
+  --motion-ease: cubic-bezier(.22, .68, 0, 1);
+  --motion-quick: 140ms;
+  --motion-standard: 280ms;
+}
+
+.playing-card {
+  transition: box-shadow 180ms ease-out, border-color var(--motion-quick) ease-out,
+    background-color var(--motion-quick) ease-out;
+}
+
+.card-button { transition: opacity var(--motion-quick) ease-out; }
+.card-button:active .playing-card { background-color: #fff9dd; }
+.cards-in-motion .card-button { pointer-events: none; }
+.move-counter { display: inline-block; animation: counter-arrive 200ms var(--motion-ease) both; }
+
+.card-flight-layer { position: fixed; inset: 0; z-index: 90; pointer-events: none; }
+.card-flight {
+  position: absolute;
+  transform-origin: top left;
+  will-change: transform;
+  pointer-events: none;
+}
+.motion-card { transition: none !important; }
+.motion-card .playing-card { transition: none !important; box-shadow: 0 2px 4px #001a1640; }
+.card-flight .playing-card { width: 100%; height: 100%; transition: none; }
+.drag-stack { transform: rotate(1.4deg) scale(1.025); transform-origin: top left; }
+.drag-stack .playing-card { transform: none; }
+.progress > span { transition: width 380ms var(--motion-ease); }
+
+.tool-button, .new-button, .icon-button, .primary, .secondary, .menu-list button {
+  transition: transform var(--motion-quick) var(--motion-ease),
+    background-color var(--motion-quick) ease-out, opacity var(--motion-quick) ease-out;
+}
+.tool-button:active:not(:disabled), .new-button:active, .primary:active, .secondary:active {
+  transform: scale(.96);
+}
+.switch { transition: background-color 180ms ease-out; }
+.switch > span { transition: margin-left 180ms var(--motion-ease); }
+.modal-backdrop { animation: backdrop-arrive 180ms ease-out both; }
+.modal { animation: dialog-arrive 320ms var(--motion-ease) both; }
+.victory { animation: trophy-arrive 550ms cubic-bezier(.2, .8, .2, 1.18) both; }
+.win-stats > div { animation: counter-arrive 320ms var(--motion-ease) 120ms both; }
+.win-stats > div:nth-child(2) { animation-delay: 180ms; }
+.win-stats > div:nth-child(3) { animation-delay: 240ms; }
+
+.victory-particles {
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 210;
+}
+.victory-particles > span {
+  position: absolute;
+  top: -40px;
+  left: var(--particle-x);
+  color: #efd28a;
+  font: 22px Georgia, serif;
+  animation: victory-fall 1.8s cubic-bezier(.2, .35, .65, 1) var(--particle-delay) both;
+}
+.victory-particles > span:nth-child(3n) { color: #ff8b96; font-size: 15px; }
+.victory-particles > span:nth-child(3n + 1) { color: #eff6df; font-size: 18px; }
+
+@keyframes counter-arrive {
+  from { transform: translateY(5px) scale(.94); opacity: .35; }
+  to { transform: translateY(0) scale(1); opacity: 1; }
+}
+@keyframes backdrop-arrive { from { opacity: 0; } to { opacity: 1; } }
+@keyframes dialog-arrive {
+  from { transform: translateY(18px) scale(.97); opacity: 0; }
+  to { transform: translateY(0) scale(1); opacity: 1; }
+}
+@keyframes trophy-arrive {
+  from { transform: translateY(8px) scale(.65) rotate(-9deg); opacity: 0; }
+  to { transform: translateY(0) scale(1) rotate(0); opacity: 1; }
+}
+@keyframes victory-fall {
+  0% { transform: translate3d(0, 0, 0) rotate(0); opacity: 0; }
+  10% { opacity: .9; }
+  70% { opacity: .8; }
+  100% { transform: translate3d(var(--particle-drift), 100dvh, 0) rotate(var(--particle-turn)); opacity: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition: none !important; }
+  .victory-particles { display: none; }
+}

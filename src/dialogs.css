@@ -1,0 +1,140 @@
+/* Grouping is neutral in portrait; landscape gets a dedicated dialog shell. */
+.modal-body,.dialog-layout,.dialog-summary,.dialog-content {display:contents}
+.landscape-dialog-action {display:none}
+.landscape-layout .modal .landscape-dialog-action {display:flex}
+.landscape-layout .modal .portrait-dialog-action {display:none}
+.landscape-layout .modal {
+  width:100%;max-width:1120px;height:100%;max-height:100%;
+  padding:0;border-radius:18px;overflow:hidden;
+}
+.landscape-layout .modal-body {
+  display:flex;flex-direction:column;height:100%;min-height:0;
+  padding:12px 58px 12px 22px;overflow:hidden;
+}
+.landscape-layout .modal-close {
+  top:10px;right:14px;width:34px;height:34px;
+  background:#e5e9da;border:1px solid #ccd3be;z-index:2;
+}
+.landscape-layout .modal-body>.back-button {
+  position:absolute;top:52px;left:auto;right:14px;width:34px;height:34px;margin:0;
+  font-size:0;padding:0;gap:0;justify-content:center;background:#e5e9da;border:1px solid #ccd3be;border-radius:50%;z-index:2;
+}
+.landscape-layout .dialog-layout {
+  display:grid;grid-template-columns:minmax(180px,.85fr) minmax(0,1.65fr);
+  gap:24px;flex:1;min-height:0;min-width:0;
+}
+.landscape-layout .dialog-summary,.landscape-layout .dialog-content {
+  display:block;min-height:0;min-width:0;overflow-y:auto;
+  overscroll-behavior:contain;-webkit-overflow-scrolling:touch;
+  padding:2px 6px 8px;scrollbar-width:thin;scrollbar-color:#bdc7b1 transparent;
+}
+.landscape-layout .dialog-summary {border-right:1px solid #d5dccb;padding-right:20px}
+.landscape-layout .modal h2 {font-size:25px;line-height:1.4;letter-spacing:1px}
+.landscape-layout .modal .eyebrow {margin:0 0 9px;font-size:9px}
+.landscape-layout .modal .modal-description {font-size:13px;line-height:1.8;margin:12px 0 16px}
+.landscape-layout .modal .modal-symbol {width:42px;height:42px;margin:0 0 12px}
+.landscape-layout .modal .level-progress {margin:14px 0;padding:12px}
+.landscape-layout .modal .level-progress>.badge-emblem {width:32px;height:38px}
+.landscape-layout .modal .level-heading {flex-wrap:wrap;gap:5px}
+.landscape-layout .modal .primary,.landscape-layout .modal .secondary {min-height:42px;padding:10px 14px;font-size:13px;margin-top:10px}
+.landscape-layout .modal .notice {margin:12px 0;padding:12px;font-size:12px;line-height:1.7}
+.landscape-layout .modal .fine-print {margin-top:12px;font-size:11px;line-height:1.7}
+.landscape-layout .modal .panel-subtitle {margin:16px 0 10px}
+/* Menu: all navigation stays visible as generous touch tiles. */
+.landscape-layout .modal-menu .menu-list {display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin:0}
+.landscape-layout .modal-menu .menu-list button {min-height:46px;padding:10px;gap:9px;border:1px solid #d1d8c6;border-radius:9px;background:#edf0e5;font-size:12px}
+/* Settings: switches on the left, appearance and sound controls on the right. */
+.landscape-layout .settings-dialog {grid-template-columns:minmax(0,1.2fr) minmax(0,1fr)}
+.landscape-layout .settings-dialog .settings-list {margin-top:12px}
+.landscape-layout .settings-dialog .setting-row {padding:12px 0;gap:12px;min-height:64px}
+.landscape-layout .settings-dialog .setting-row b {font-size:14px}
+.landscape-layout .settings-dialog .setting-row small {font-size:11px;line-height:1.6;margin-top:5px}
+.landscape-layout .settings-dialog .volume-row {margin:0 0 18px;flex-wrap:wrap;font-size:12px}
+.landscape-layout .settings-dialog .volume-row input {min-width:70px}
+.landscape-layout .settings-dialog .theme-grid {gap:8px}
+.landscape-layout .settings-dialog .theme-swatch {height:55px}
+.landscape-layout .settings-dialog .theme-tile {font-size:12px;padding:9px}
+.landscape-layout .settings-dialog .photo-actions {font-size:12px}
+/* New game: compact rewards and a short path to starting a deal. */
+.modal-new .back-button {margin-bottom:12px}
+.new-game-first-win {display:flex;align-items:center;gap:7px;margin:12px 0 8px;padding:9px 11px;border:1px solid #dfbc6b;border-radius:8px;background:#fff0c7;color:#765018;font-size:12px;font-weight:600}
+.new-game-first-win svg {flex-shrink:0}
+.new-game-first-win.reward-claimed {border-color:#c6d4c3;background:#e3ebdf;color:#586f52}
+.modal-new .speed-rewards {margin:0;padding:0;border:0;background:transparent}
+.modal-new .speed-rewards>div {margin:0;gap:6px}
+.modal-new .difficulty-grid {margin:14px 0 10px;gap:7px}
+.modal-new .difficulty-grid button {flex-direction:row;align-items:center;justify-content:space-between;gap:5px;padding:12px 10px;min-height:44px}
+.modal-new .difficulty-grid b {font-size:13px}
+.modal-new .difficulty-grid small {font-size:10px;white-space:nowrap}
+.numbered-deal-form {display:grid;grid-template-columns:auto minmax(0,1fr);align-items:center;column-gap:10px;margin-top:16px}
+.numbered-deal-form .input-label {margin:0;font-size:11px}
+.numbered-deal-form .deal-input {height:44px;padding:0 8px;gap:5px}
+.numbered-deal-form .deal-input input {font-size:13px}
+.numbered-deal-form .input-error {grid-column:1 / -1;min-height:0;padding:0}
+.numbered-deal-form .input-error:not(:empty) {padding-top:6px}
+.new-game-warning {margin:12px 0 0;font-size:11px;line-height:1.6;color:#77805e}
+.landscape-layout .modal-new .difficulty-grid {margin:0 0 10px}
+.landscape-layout .modal-new .speed-rewards {margin:0}
+/* Records: overview stays visible while the selected collection scrolls. */
+.landscape-layout .stats-dialog {grid-template-columns:minmax(190px,.8fr) minmax(0,1.8fr)}
+.landscape-layout .stats-dialog .stats-grid {grid-template-columns:repeat(2,minmax(0,1fr));margin-top:14px}
+.landscape-layout .stats-dialog .stats-grid>div {padding:12px 4px}
+.landscape-layout .stats-dialog .stats-grid b {font-size:24px;margin-bottom:5px}
+.landscape-layout .stats-dialog .personal-best {margin-top:12px;gap:10px;font-size:11px}
+.landscape-layout .stats-dialog .dialog-content>.panel-tabs {position:sticky;top:-2px;z-index:1;margin:0 0 14px;background:#e5e8dc;box-shadow:0 5px 0 #f5f2e7}
+.landscape-layout .stats-dialog .panel-tabs button {padding:10px 5px;font-size:12px;white-space:nowrap}
+.landscape-layout .stats-dialog .achievement-list {grid-template-columns:repeat(2,minmax(0,1fr))}
+.landscape-layout .stats-dialog .achievement-card {align-items:flex-start;flex-direction:column;padding:12px}
+.landscape-layout .stats-dialog .achievement-art,.landscape-layout .stats-dialog .achievement-secret {width:56px;height:56px}
+.landscape-layout .stats-dialog .achievement-copy {width:100%}
+.landscape-layout .stats-dialog .achievement-heading {flex-wrap:wrap;gap:4px}
+.landscape-layout .stats-dialog .achievement-heading>b {font-size:13px}
+.landscape-layout .stats-dialog .achievement-copy>p {font-size:11px}
+.landscape-layout .stats-dialog .record-list {max-height:none;overflow:visible}
+.landscape-layout .stats-dialog .record-row {padding:14px 0}
+/* Daily challenge: calendar is a compact date picker, rewards occupy the right. */
+.landscape-layout .daily-dialog {grid-template-columns:minmax(230px,1fr) minmax(0,1.15fr)}
+.landscape-layout .daily-dialog .modal-symbol,.landscape-layout .daily-dialog .eyebrow {display:none}
+.landscape-layout .daily-dialog .modal-description {font-size:11px;margin:7px 0 10px}
+.landscape-layout .daily-dialog .calendar-heading {margin:8px 0}
+.landscape-layout .daily-dialog .calendar-heading button {width:32px;height:32px}
+.landscape-layout .daily-dialog .calendar-grid {gap:3px}
+.landscape-layout .daily-dialog .calendar-grid>* {aspect-ratio:auto;min-height:30px}
+.landscape-layout .daily-dialog .calendar-grid .weekday {min-height:20px}
+.landscape-layout .daily-dialog .monthly-badges {margin:0;gap:5px}
+.landscape-layout .daily-dialog .monthly-badges>div {padding:9px 2px;gap:4px}
+.landscape-layout .daily-dialog .monthly-badges .badge-emblem {width:32px;height:38px}
+.landscape-layout .daily-dialog .monthly-badges b {font-size:10px}
+.landscape-layout .daily-dialog .daily-detail {padding:14px;gap:6px}
+/* Rules, victory and confirmations have their own wide compositions. */
+.landscape-layout .modal-rules .rules {display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;margin:0}
+.landscape-layout .modal-rules .rules>div {gap:9px;margin:0;padding:12px;background:#e8ecdf;border-radius:10px}
+.landscape-layout .modal-rules .rules p {font-size:12px}
+.landscape-layout .modal-win .win-stats {margin:14px 0;padding:15px 0}
+.landscape-layout .modal-win .achievement-unlocks {margin:0 0 14px}
+.landscape-layout .modal-win .achievement-unlocks>div {display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}
+.landscape-layout .modal-win .dialog-summary .victory {width:56px;height:56px}
+.landscape-layout .modal-pause .dialog-content,.landscape-layout .modal-restart .dialog-content {display:flex;flex-direction:column;justify-content:center;padding:12px}
+.landscape-layout .modal-pause .pause-time {font-size:52px;margin:12px 0 24px}
+.landscape-layout .clear-data-confirm {flex:1;min-height:0;overflow-y:auto;max-width:720px;width:100%;margin:auto;padding:4px 12px}
+.landscape-layout .clear-data-confirm .modal-symbol {float:left;margin-right:14px}
+.landscape-layout .clear-data-confirm>.primary,.landscape-layout .clear-data-confirm>.secondary {display:inline-flex;width:calc(50% - 6px);vertical-align:top}
+.landscape-layout .clear-data-confirm>.primary {margin-left:12px}
+/* Use the logical width, including when a portrait browser rotates the app. */
+@supports (container-type:inline-size) {
+  .landscape-layout .modal {container-type:inline-size}
+  @container (max-width:600px) {
+    .landscape-layout .dialog-layout {grid-template-columns:minmax(160px,.85fr) minmax(0,1.3fr);gap:14px}
+    .landscape-layout .dialog-summary {padding-right:12px}
+    .landscape-layout .settings-dialog,.landscape-layout .daily-dialog {grid-template-columns:repeat(2,minmax(0,1fr))}
+    .landscape-layout .modal-body {padding-left:14px;padding-right:58px}
+    .landscape-layout .modal h2 {font-size:22px}
+    .landscape-layout .stats-dialog .achievement-list {grid-template-columns:1fr}
+    .landscape-layout .stats-dialog .achievement-card {flex-direction:row;gap:10px}
+    .landscape-layout .stats-dialog .achievement-art,.landscape-layout .stats-dialog .achievement-secret {width:44px;height:44px}
+    .landscape-layout .modal-menu .menu-list {grid-template-columns:1fr}
+    .landscape-layout .modal-rules .rules {grid-template-columns:1fr}
+  }
+}
+
+.landscape-layout .numbered-deal-form {margin-top:0}

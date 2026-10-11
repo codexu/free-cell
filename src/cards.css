@@ -1,0 +1,66 @@
+/* Rank and suit share one exposed row; all suits are cached SVG images. */
+:root { --ink: #17212b; --red: #c6263c; }
+.playing-card {
+  container-type: inline-size;
+  background: #fffefb;
+  border: 1px solid #e6e4dc;
+  box-shadow: 0 2px 4px #00190f30;
+}
+.playing-card .card-header {
+  position: absolute;
+  top: var(--card-label-top,5px); left: 5px; right: 5px;
+  display: flex;
+  flex-flow: row nowrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1px;
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: clamp(15px, 2.1vw, 28px);
+  font-size: var(--card-label-size,clamp(15px, 36cqw, 28px));
+  line-height: 1;
+  white-space: nowrap;
+}
+.playing-card .card-header b {
+  font-size: 1em;
+  font-weight: 800;
+  letter-spacing: -.7px;
+  font-variant-numeric: lining-nums;
+}
+.playing-card .header-suit { display: block; width: 1em; height: 1em; flex: 0 0 auto; }
+.playing-card .single-suit {
+  position: absolute;
+  left: 20%; top: 34%; width: 60%; height: 42%;
+  object-fit: contain;
+  pointer-events: none;
+}
+.playing-card.covered { background: #d9dcd4; border-color: #bfc6b9; }
+.large-ranks .playing-card .card-header { font-size: var(--card-label-size,clamp(16px, 39cqw, 32px)); }
+@media (max-width: 700px) {
+  .playing-card .card-header { top: 4px; left: 2px; right: 2px; font-size: clamp(13px, 36cqw, 25px); }
+  .large-ranks .playing-card .card-header { font-size: clamp(14px, 39cqw, 29px); }
+}
+
+/* The floating copy is the only visible card while dragging. */
+.card-button.drag-origin { opacity: 0; transition: none; }
+
+.app {
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+}
+.app * {
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+}
+.app input, .app textarea {
+  -webkit-user-select: text;
+  user-select: text;
+}
+
+.foundation-empty span { color: #e2e8d591; }
+.foundation-empty small { color: #b7caae; white-space: nowrap; flex-shrink: 0; }
+.empty-slot { border-color: #c2d4ad65; }
+.empty-slot svg { color: #b4caa88a; }
+.column-count { color: #bed2b7b3; }
+

@@ -1,0 +1,25 @@
+node_modules
+dist
+.DS_Store
+src-tauri/target
+src-tauri/gen/apple/build
+src-tauri/gen/apple/Pods
+src-tauri/gen/apple/Externals
+src-tauri/gen/apple/assets
+src-tauri/gen/apple/**/*.xcuserstate
+src-tauri/gen/apple/**/xcuserdata
+*.local
+
+# 本机环境与签名文件
+.env
+.env.*
+!.env.example
+*.pem
+*.p12
+*.p8
+*.mobileprovision
+*.keystore
+*.jks
+*.log
+src-tauri/gen/schemas/
+src-tauri/gen/apple/ExportOptions.plist

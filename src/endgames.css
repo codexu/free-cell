@@ -1,0 +1,14 @@
+.endgame-objective{display:flex;flex-direction:column;align-items:center;gap:4px;width:100%;margin:0 0 10px;padding:8px;border:1px solid #d4bb7940;border-radius:8px;background:#d4bb790c;color:#ead49f;text-align:center}
+.endgame-objective b{font-size:11px;font-weight:500;line-height:1.5}.endgame-objective span{font-size:10px;color:#bfceb6;line-height:1.4}
+.new-game-dailies{margin-top:20px;padding-top:16px;border-top:1px solid #d6dbce;text-align:left}
+.new-game-dailies h3{margin:0 0 10px;font-size:12px;font-weight:600;color:#536c4c}
+.daily-game-entry{display:flex;align-items:center;gap:10px;width:100%;min-height:66px;margin-top:8px;padding:12px;border:1px solid #d6bb75;border-radius:9px;background:#f5ecd3;color:#785e29;text-align:left}
+.daily-game-copy{flex:1;min-width:0}.daily-game-copy b{display:block;font-size:13px}.daily-game-copy small{display:block;font-size:10px;line-height:1.6;margin-top:4px;color:#81744f}
+.daily-game-reward{flex-shrink:0;text-align:right}.daily-game-reward strong{display:block;font-size:13px;font-variant-numeric:tabular-nums;white-space:nowrap}.daily-game-reward small{display:block;margin-top:4px;font-size:9px;color:#81744f}
+.daily-game-entry.reward-claimed{border-color:#c6d4c3;background:#e8efdf;color:#586f52}.daily-game-entry.reward-claimed small{color:#74846a}
+.new-game-dailies>p{margin:10px 0 0;font-size:10px;line-height:1.6;color:#77846a}
+@media(max-width:390px){.daily-game-entry{gap:7px;padding:10px}.daily-game-entry>svg:first-child{width:16px}.daily-game-reward strong{font-size:12px}}
+.landscape-layout .endgame-objective{order:1;padding:8px 4px;margin:7px 0 0;align-items:flex-start;text-align:left}
+
+
+.precision-result{display:flex;flex-direction:column;align-items:center;gap:6px;padding:14px;margin-bottom:12px;border:1px solid #c9aa5c;border-radius:10px;background:#f7efd8;color:#785e29}.precision-result .gameplay-badge{width:54px;height:54px}.precision-result b{font-size:18px}.precision-result span{font-size:11px}.precision-silver{border-color:#a7b5c0;background:#eef1f4;color:#586775}.precision-bronze{border-color:#bd977a;background:#f3e8df;color:#8b6247}

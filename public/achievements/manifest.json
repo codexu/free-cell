@@ -1,0 +1,502 @@
+[
+  {
+    "id": "hundred-library",
+    "name": "百局有成",
+    "category": "长期积累",
+    "condition": "通关 100 个不同编号",
+    "xp": 500,
+    "art": "hundred-library.svg",
+    "target": 100,
+    "hidden": false
+  },
+  {
+    "id": "collector-vault",
+    "name": "解局收藏家",
+    "category": "长期积累",
+    "condition": "通关 500 个不同编号",
+    "xp": 1500,
+    "art": "collector-vault.svg",
+    "target": 500,
+    "hidden": false
+  },
+  {
+    "id": "thousand-fireworks",
+    "name": "千局传奇",
+    "category": "长期积累",
+    "condition": "通关 1,000 个不同编号",
+    "xp": 3000,
+    "art": "thousand-fireworks.svg",
+    "target": 1000,
+    "hidden": false
+  },
+  {
+    "id": "four-directions",
+    "name": "全面发展",
+    "category": "长期积累",
+    "condition": "四种难度各通关 25 个不同编号",
+    "xp": 1000,
+    "art": "four-directions.svg",
+    "target": 100,
+    "hidden": false
+  },
+  {
+    "id": "one-minute",
+    "name": "分秒必争",
+    "category": "速度",
+    "condition": "1 分钟内通关",
+    "xp": 500,
+    "art": "one-minute.svg",
+    "target": 1,
+    "hidden": false
+  },
+  {
+    "id": "fast-and-steady",
+    "name": "快而稳",
+    "category": "速度",
+    "condition": "20 个不同编号在 2 分钟内通关",
+    "xp": 600,
+    "art": "fast-and-steady.svg",
+    "target": 20,
+    "hidden": false
+  },
+  {
+    "id": "calm-wings",
+    "name": "稳中求快",
+    "category": "速度",
+    "condition": "无提示、无撤销，2 分钟内通关",
+    "xp": 600,
+    "art": "calm-wings.svg",
+    "target": 1,
+    "hidden": false
+  },
+  {
+    "id": "expert-expedition",
+    "name": "专家风范",
+    "category": "速度",
+    "condition": "专家局无提示、无撤销，3 分钟内通关",
+    "xp": 1000,
+    "art": "expert-expedition.svg",
+    "target": 1,
+    "hidden": false
+  },
+  {
+    "id": "empty-courtyard",
+    "name": "四格从容",
+    "category": "空间管理",
+    "condition": "全程不使用中转格通关",
+    "xp": 600,
+    "art": "empty-courtyard.svg",
+    "target": 1,
+    "hidden": false
+  },
+  {
+    "id": "two-lanterns",
+    "name": "留有余地",
+    "category": "空间管理",
+    "condition": "困难局全程最多占用两个中转格并通关",
+    "xp": 500,
+    "art": "two-lanterns.svg",
+    "target": 1,
+    "hidden": false
+  },
+  {
+    "id": "balanced-scales",
+    "name": "运筹帷幄",
+    "category": "空间管理",
+    "condition": "专家局全程最多占用两个中转格并通关",
+    "xp": 1000,
+    "art": "balanced-scales.svg",
+    "target": 1,
+    "hidden": false
+  },
+  {
+    "id": "recovery-lotus",
+    "name": "绝处逢生",
+    "category": "空间管理",
+    "condition": "四格全满且无空列的局面之后通关",
+    "xp": 500,
+    "art": "recovery-lotus.svg",
+    "target": 1,
+    "hidden": true
+  },
+  {
+    "id": "composed-pavilion",
+    "name": "游刃有余",
+    "category": "空间管理",
+    "condition": "10 个不同编号全程最多占用两个中转格并通关",
+    "xp": 700,
+    "art": "composed-pavilion.svg",
+    "target": 10,
+    "hidden": false
+  },
+  {
+    "id": "long-train",
+    "name": "长龙初现",
+    "category": "整理与操作",
+    "condition": "整理八张连续有序牌后通关",
+    "xp": 300,
+    "art": "long-train.svg",
+    "target": 1,
+    "hidden": false
+  },
+  {
+    "id": "complete-dragon",
+    "name": "一气贯通",
+    "category": "整理与操作",
+    "condition": "整理出 K 到 A 完整有序牌组后通关",
+    "xp": 1000,
+    "art": "complete-dragon.svg",
+    "target": 1,
+    "hidden": true
+  },
+  {
+    "id": "grand-migration",
+    "name": "大举迁移",
+    "category": "整理与操作",
+    "condition": "一次移动至少八张牌后通关",
+    "xp": 800,
+    "art": "grand-migration.svg",
+    "target": 1,
+    "hidden": true
+  },
+  {
+    "id": "returning-koi",
+    "name": "收放自如",
+    "category": "整理与操作",
+    "condition": "从收牌区取回牌后通关",
+    "xp": 300,
+    "art": "returning-koi.svg",
+    "target": 1,
+    "hidden": false
+  },
+  {
+    "id": "handcrafted-finish",
+    "name": "自己收尾",
+    "category": "整理与操作",
+    "condition": "关闭自动收牌、不使用一键完成通关",
+    "xp": 500,
+    "art": "handcrafted-finish.svg",
+    "target": 1,
+    "hidden": false
+  },
+  {
+    "id": "strategy-knight",
+    "name": "胸有成竹",
+    "category": "解局能力",
+    "condition": "无提示、无撤销通关",
+    "xp": 500,
+    "art": "strategy-knight.svg",
+    "target": 1,
+    "hidden": false
+  },
+  {
+    "id": "wise-dragon",
+    "name": "真正的高手",
+    "category": "解局能力",
+    "condition": "专家局无提示、无撤销通关",
+    "xp": 1000,
+    "art": "wise-dragon.svg",
+    "target": 1,
+    "hidden": false
+  },
+  {
+    "id": "eighty-steps",
+    "name": "精打细算",
+    "category": "解局能力",
+    "condition": "80 次操作内通关",
+    "xp": 400,
+    "art": "eighty-steps.svg",
+    "target": 1,
+    "hidden": false
+  },
+  {
+    "id": "sixty-five-steps",
+    "name": "步步有数",
+    "category": "解局能力",
+    "condition": "65 次操作内通关",
+    "xp": 800,
+    "art": "sixty-five-steps.svg",
+    "target": 1,
+    "hidden": false
+  },
+  {
+    "id": "independent-captain",
+    "name": "独当一面",
+    "category": "解局能力",
+    "condition": "20 个不同编号无提示、无撤销通关",
+    "xp": 1000,
+    "art": "independent-captain.svg",
+    "target": 20,
+    "hidden": false
+  },
+  {
+    "id": "expert-resident",
+    "name": "专家常客",
+    "category": "专家与连胜",
+    "condition": "通关 25 个不同专家编号",
+    "xp": 1000,
+    "art": "expert-resident.svg",
+    "target": 25,
+    "hidden": false
+  },
+  {
+    "id": "expert-hundred",
+    "name": "专家百战",
+    "category": "专家与连胜",
+    "condition": "通关 100 个不同专家编号",
+    "xp": 2000,
+    "art": "expert-hundred.svg",
+    "target": 100,
+    "hidden": false
+  },
+  {
+    "id": "victory-blaze",
+    "name": "十全十美",
+    "category": "专家与连胜",
+    "condition": "连续通关 10 个不同编号",
+    "xp": 800,
+    "art": "victory-blaze.svg",
+    "target": 10,
+    "hidden": false
+  },
+  {
+    "id": "ever-victorious",
+    "name": "常胜牌手",
+    "category": "专家与连胜",
+    "condition": "连续通关 20 个不同编号",
+    "xp": 1500,
+    "art": "ever-victorious.svg",
+    "target": 20,
+    "hidden": false
+  },
+  {
+    "id": "expert-chain",
+    "name": "专家连捷",
+    "category": "专家与连胜",
+    "condition": "连续通关五个不同专家编号",
+    "xp": 1200,
+    "art": "expert-chain.svg",
+    "target": 5,
+    "hidden": false
+  },
+  {
+    "id": "personal-dawn",
+    "name": "再进一步",
+    "category": "自我突破",
+    "condition": "重玩将个人最佳用时缩短至少 20%",
+    "xp": 300,
+    "art": "personal-dawn.svg",
+    "target": 1,
+    "hidden": false
+  },
+  {
+    "id": "fewer-moves",
+    "name": "更少一步",
+    "category": "自我突破",
+    "condition": "重玩将个人最佳步数减少至少十步",
+    "xp": 300,
+    "art": "fewer-moves.svg",
+    "target": 1,
+    "hidden": false
+  },
+  {
+    "id": "double-breakthrough",
+    "name": "双重突破",
+    "category": "自我突破",
+    "condition": "同一局同时刷新编号最佳用时和步数",
+    "xp": 600,
+    "art": "double-breakthrough.svg",
+    "target": 1,
+    "hidden": true
+  },
+  {
+    "id": "breakthrough-ten",
+    "name": "十次突破",
+    "category": "自我突破",
+    "condition": "十个不同编号刷新个人最佳用时",
+    "xp": 800,
+    "art": "breakthrough-ten.svg",
+    "target": 10,
+    "hidden": false
+  },
+  {
+    "id": "master-debut",
+    "name": "初登大师",
+    "category": "每日挑战",
+    "condition": "首次完成每日大师挑战",
+    "xp": 200,
+    "art": "master-debut.svg",
+    "target": 1,
+    "hidden": false
+  },
+  {
+    "id": "master-ten",
+    "name": "大师十日",
+    "category": "每日挑战",
+    "condition": "完成 10 个不同日期的每日大师挑战",
+    "xp": 600,
+    "art": "master-ten.svg",
+    "target": 10,
+    "hidden": false
+  },
+  {
+    "id": "master-thirty",
+    "name": "大师常客",
+    "category": "每日挑战",
+    "condition": "完成 30 个不同日期的每日大师挑战",
+    "xp": 1500,
+    "art": "master-thirty.svg",
+    "target": 30,
+    "hidden": false
+  },
+  {
+    "id": "master-clean",
+    "name": "独立破局",
+    "category": "每日挑战",
+    "condition": "不用提示、不撤销，通关 3 个不同编号的每日大师对局",
+    "xp": 1000,
+    "art": "master-clean.svg",
+    "target": 3,
+    "hidden": false
+  },
+  {
+    "id": "endgame-debut",
+    "name": "残局初解",
+    "category": "每日挑战",
+    "condition": "首次完成每日残局挑战",
+    "xp": 200,
+    "art": "endgame-debut.svg",
+    "target": 1,
+    "hidden": false
+  },
+  {
+    "id": "endgame-ten",
+    "name": "残局巧手",
+    "category": "每日挑战",
+    "condition": "完成 10 个不同日期的每日残局挑战",
+    "xp": 600,
+    "art": "endgame-ten.svg",
+    "target": 10,
+    "hidden": false
+  },
+  {
+    "id": "endgame-versatile",
+    "name": "三招齐备",
+    "category": "每日挑战",
+    "condition": "分别完成收官、中转解围、腾空行动三种残局",
+    "xp": 800,
+    "art": "endgame-versatile.svg",
+    "target": 3,
+    "hidden": false
+  },
+  {
+    "id": "endgame-week",
+    "name": "七日解局",
+    "category": "每日挑战",
+    "condition": "连续 7 天在当天完成每日残局挑战",
+    "xp": 1000,
+    "art": "endgame-week.svg",
+    "target": 7,
+    "hidden": false
+  },
+  {
+    "id": "special-debut",
+    "name": "规则初探",
+    "category": "每日挑战",
+    "condition": "首次完成每日特殊规则",
+    "xp": 200,
+    "art": "special-debut.svg",
+    "target": 1,
+    "hidden": false
+  },
+  {
+    "id": "special-ten",
+    "name": "变局行家",
+    "category": "每日挑战",
+    "condition": "完成 10 个不同日期的每日特殊规则",
+    "xp": 600,
+    "art": "special-ten.svg",
+    "target": 10,
+    "hidden": false
+  },
+  {
+    "id": "special-versatile",
+    "name": "规则通才",
+    "category": "每日挑战",
+    "condition": "分别完成封印一格、王者空列、花色优先三种规则",
+    "xp": 800,
+    "art": "special-versatile.svg",
+    "target": 3,
+    "hidden": false
+  },
+  {
+    "id": "precision-debut",
+    "name": "精准初试",
+    "category": "每日挑战",
+    "condition": "首次完成每日精准挑战",
+    "xp": 200,
+    "art": "precision-debut.svg",
+    "target": 1,
+    "hidden": false
+  },
+  {
+    "id": "precision-ten",
+    "name": "步数行家",
+    "category": "每日挑战",
+    "condition": "完成 10 个不同日期的每日精准挑战",
+    "xp": 600,
+    "art": "precision-ten.svg",
+    "target": 10,
+    "hidden": false
+  },
+  {
+    "id": "same-suit-debut",
+    "name": "同花初成",
+    "category": "每日挑战",
+    "condition": "首次完成每日同花挑战",
+    "xp": 200,
+    "art": "same-suit-debut.svg",
+    "target": 1,
+    "hidden": false
+  },
+  {
+    "id": "same-suit-ten",
+    "name": "同花名家",
+    "category": "每日挑战",
+    "condition": "完成 10 个不同日期的每日同花挑战",
+    "xp": 600,
+    "art": "same-suit-ten.svg",
+    "target": 10,
+    "hidden": false
+  },
+  {
+    "id": "reverse-debut",
+    "name": "逆序初解",
+    "category": "每日挑战",
+    "condition": "首次完成每日逆序挑战",
+    "xp": 200,
+    "art": "reverse-debut.svg",
+    "target": 1,
+    "hidden": false
+  },
+  {
+    "id": "reverse-ten",
+    "name": "逆序高手",
+    "category": "每日挑战",
+    "condition": "完成 10 个不同日期的每日逆序挑战",
+    "xp": 600,
+    "art": "reverse-ten.svg",
+    "target": 10,
+    "hidden": false
+  },
+  {
+    "id": "precision-gold",
+    "name": "五日金牌",
+    "category": "每日挑战",
+    "condition": "在 5 个不同日期的每日精准挑战中获得金牌",
+    "xp": 1000,
+    "art": "precision-gold.svg",
+    "target": 5,
+    "hidden": false
+  }
+]
