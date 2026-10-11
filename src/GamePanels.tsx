@@ -10,7 +10,7 @@ import { AchievementCollection } from './AchievementPanels';
 import { ACHIEVEMENTS } from './achievements';
 import { BadgeCarousel } from './BadgeCarousel';
 import { BadgeEmblem } from './BadgeEmblem';
-import { specialRuleInfo, specialTitle, isDailyVariant, DAILY_VARIANTS, precisionMedal } from './specialRules';
+import { specialRuleInfo, specialTitle, isDailyVariant, precisionMedal } from './specialRules';
 import { endgameMode } from './endgames';
 
 const time = (seconds: number) => `${String(Math.floor(seconds / 60)).padStart(2, '0')}:${String(seconds % 60).padStart(2, '0')}`;
@@ -47,7 +47,6 @@ export function LevelProgress({ stats, compact = false, detailed = false }: { st
         <div><dt>最快通关</dt><dd>{stats.bestSeconds === null ? '—' : time(stats.bestSeconds)}</dd></div>
         <div><dt>最少步数</dt><dd>{stats.bestMoves === null ? '—' : `${stats.bestMoves} 步`}</dd></div>
       </dl>
-      <div className="level-collection-summary"><span>成就 <b>{ACHIEVEMENTS.filter(item => stats.achievements?.unlocked[item.id]).length}/{ACHIEVEMENTS.length}</b></span><span>每日大师挑战 <b>{Object.keys(stats.masters).length} 天</b></span><span>每日残局挑战 <b>{Object.keys(stats.endgames).length} 天</b></span><span>每日特殊规则 <b>{Object.values(stats.specials).filter(record => !isDailyVariant(record.kind)).length} 天</b></span>{DAILY_VARIANTS.map(kind => <span key={kind}>{specialTitle({ kind, prioritySuit: 0 })} <b>{Object.values(stats.specials).filter(record => record.kind === kind).length} 天</b></span>)}</div>
     </>}
   </div>;
 }

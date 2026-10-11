@@ -108,5 +108,3 @@
 .level-best-results{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin:12px 0}
 .level-best-results>div{display:flex;flex-direction:column;gap:5px;padding:9px 10px;border:1px solid #d1d9c8;border-radius:8px;background:#f5f7ee}
 .level-best-results dd{font-size:16px;font-weight:600}
-.level-collection-summary{display:flex;justify-content:space-between;flex-wrap:wrap;gap:7px;font-size:10px;color:#63765d}
-.level-collection-summary b{margin-left:3px;color:#80632c;font-weight:600}
