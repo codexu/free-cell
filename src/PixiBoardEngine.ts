@@ -2,7 +2,7 @@ import { Application, Container, Graphics, Sprite, Text } from 'pixi.js';
 // Pixi's interpreter avoids generated functions under Tauri's existing CSP.
 import 'pixi.js/unsafe-eval';
 import { canMove, moveBoard, picked, sequence, won, type Board, type Move, type Source, type Target } from './game';
-import { createCardTextures, CARD_TEXTURE_WIDTH, CARD_TEXTURE_HEIGHT, CARD_SHADOW_PADDING, CARD_CORNER_RADIUS } from './pixiCardTextures';
+import { createCardTextures, SUIT_PATHS, CARD_TEXTURE_WIDTH, CARD_TEXTURE_HEIGHT, CARD_SHADOW_PADDING, CARD_CORNER_RADIUS } from './pixiCardTextures';
 import { contains, layoutBoard, type BoardLayout, type CardPose, type LayoutOptions } from './pixiBoardLayout';
 
 export type PixiBoardState = { board: Board; gameId: string; targetColumn?: number; selection: Source | null; suggestion: Move | null; disabled: boolean; paused: boolean; compact: boolean; landscape: boolean; rotated: boolean; cellsRight: boolean; large: boolean; onCard: (source: Source) => void; onTarget: (target: Target) => void; onBlank: () => void; onHintEnd: (move: Move) => void; onDrop: (source: Source, target: Target | null) => boolean; onDrag: (active: boolean, source?: Source) => void };
@@ -22,6 +22,7 @@ export class PixiBoardEngine implements PixiBoardController {
   private cards = new Container();
   private decorations = new Container();
   private slots = new Graphics();
+  private foundationIcons: Graphics[] = [];
   private hintLayer = new Container();
   private hintGhosts: HintGhost[] = [];
   private hintStart = 0;
@@ -255,6 +256,7 @@ export class PixiBoardEngine implements PixiBoardController {
     }
     this.decorationKey = key;
     this.slots.clear();
+    this.foundationIcons.forEach(icon => icon.destroy()); this.foundationIcons = [];
     this.labelViews.forEach(label => label.destroy()); this.labelViews = [];
     const label = (text: string, x: number, y: number, size: number, center = false, color = 0xb8cbb0) => {
       const node = new Text({ text, style: { fontFamily: 'Georgia, serif', fontSize: size, fill: color, wordWrap: false } });
@@ -278,12 +280,16 @@ export class PixiBoardEngine implements PixiBoardController {
       }
       if (target.kind === 'foundation') {
         const centerX = box.x + box.width / 2;
-        const suit = label(['♣', '♦', '♥', '♠'][target.index], centerX, 0, Math.min(36, box.width * .6), true, 0x9eaf9d);
+        // Fixed vector silhouettes avoid platform emoji colors and font metrics.
+        const suitSize = Math.min(22, box.width * .42, box.height * .27);
         const range = label(priorityLocked && target.index !== rules?.prioritySuit ? '待解锁' : rules?.kind === 'suit-first' && target.index === rules.prioritySuit ? '优先 A–K' : rules?.kind === 'reverse' ? 'K–A' : 'A–K', centerX, 0, Math.min(10, box.width * .19), true);
         const gap = Math.min(8, box.width * .12);
-        const top = box.y + (box.height - suit.height - gap - range.height) / 2;
-        suit.y = top;
-        range.y = top + suit.height + gap;
+        const top = box.y + (box.height - suitSize - gap - range.height) / 2;
+        const icon = new Graphics().svg(`<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 100 100"><path d="${SUIT_PATHS[target.index]}" fill="#9eaf9d"/></svg>`);
+        icon.position.set(centerX - suitSize / 2, top);
+        icon.scale.set(suitSize / 100);
+        this.decorations.addChild(icon); this.foundationIcons.push(icon);
+        range.y = top + suitSize + gap;
       } else label('+', box.x + box.width / 2, box.y + box.height * .27, Math.min(30, box.width * .55), true);
     }
   }
