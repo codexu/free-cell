@@ -1,4 +1,5 @@
 import { nextPlayableDeal, validDeal } from './deals';
+import type { Difficulty } from './difficulty';
 export { randomDeal } from './deals';
 
 export const SUITS = ['♣', '♦', '♥', '♠'] as const;
@@ -6,8 +7,8 @@ export type Card = { id: number; rank: number; suit: number };
 export type SpecialKind = 'three-cells' | 'kings-empty' | 'suit-first' | 'precision' | 'same-suit' | 'reverse';
 export type DailyVariant = 'precision' | 'same-suit' | 'reverse';
 export type SpecialRule = { kind: SpecialKind; prioritySuit: number; goldMoves?: number; silverMoves?: number };
-export type SpecialChallenge = SpecialRule & { version: 1; date: string };
-export type SpecialRecord = SpecialRule & { version: 1; bestMoves: number; bestSeconds: number; date: string };
+export type SpecialChallenge = SpecialRule & { version: 1 | 2; date: string };
+export type SpecialRecord = SpecialRule & { version: SpecialChallenge['version']; bestMoves: number; bestSeconds: number; date: string };
 export type Board = { rules?: SpecialRule; columns: Card[][]; cells: (Card | null)[]; foundations: number[] };
 export type Source = { kind: 'column' | 'cell' | 'foundation'; index: number; offset: number };
 export type Target = { kind: Source['kind']; index: number };
@@ -15,13 +16,13 @@ export type Move = { from: Source; to: Target };
 export type AchievementRun = { eligible: boolean; hints: number; undos: number; manualMoves: number; usedAuto: boolean; usedCollect: boolean; maxCells: number; crowded: boolean; longestSequence: number; maxMoved: number; retrieved: boolean };
 export type AchievementState = { unlocked: Record<string, string>; progress: Record<string, number>; sets: Record<string, number[]>; streakDeals: number[]; expertStreak: number[]; dailyDates: string[] };
 export type EndgameKind = 'finish' | 'rescue' | 'clear';
-export type EndgameChallenge = { version: 1 | 2; date: string; kind: EndgameKind; baseRank: number; targetColumn: number };
+export type EndgameChallenge = { version: 1 | 2 | 3; date: string; kind: EndgameKind; baseRank: number; targetColumn: number };
 export type EndgameRecord = { version?: EndgameChallenge['version']; kind: EndgameKind; bestMoves: number; bestSeconds: number; date: string };
 export type Game = { deal: number; board: Board; history: Board[]; redo: Board[]; moveCosts?: number[]; redoCosts?: number[]; moves: number; seconds: number; started: boolean; id: string; held: number[]; heldHistory: number[][]; heldRedo: number[][]; challengeDate?: string; masterDate?: string; special?: SpecialChallenge; endgame?: EndgameChallenge; achievementRun?: AchievementRun };
 export type RunRecord = { id: string; deal: number; moves: number; seconds: number; status: 'playing' | 'won' | 'abandoned'; date: string; challengeDate?: string; masterDate?: string; special?: SpecialChallenge; endgame?: EndgameChallenge };
 export type DealRecord = { attempts: number; wins: number; bestMoves: number | null; bestSeconds: number | null };
 export type ChallengeRecord = { deal: number; bestMoves: number; bestSeconds: number; date: string };
-export type Stats = { xp: number; xpAwards: string[]; lastReward?: { gameId: string; xp: number; firstWinBonus?: number; speedBonus?: number; achievementIds?: string[]; achievementXp?: number }; achievements?: AchievementState; played: number; won: number; bestSeconds: number | null; bestMoves: number | null; completed: string[]; streak: number; longestStreak: number; recent: RunRecord[]; deals: Record<string, DealRecord>; challenges: Record<string, ChallengeRecord>; masters: Record<string, ChallengeRecord>; specials: Record<string, SpecialRecord>; endgames: Record<string, EndgameRecord> };
+export type Stats = { difficultyWins?: { date: string; counts: Partial<Record<Difficulty, number>> }; xp: number; xpAwards: string[]; lastReward?: { gameId: string; xp: number; firstWinBonus?: number; speedBonus?: number; achievementIds?: string[]; achievementXp?: number }; achievements?: AchievementState; played: number; won: number; bestSeconds: number | null; bestMoves: number | null; completed: string[]; streak: number; longestStreak: number; recent: RunRecord[]; deals: Record<string, DealRecord>; challenges: Record<string, ChallengeRecord>; masters: Record<string, ChallengeRecord>; specials: Record<string, SpecialRecord>; endgames: Record<string, EndgameRecord> };
 export const EMPTY_STATS: Stats = { xp: 0, xpAwards: [], played: 0, won: 0, bestSeconds: null, bestMoves: null, completed: [], streak: 0, longestStreak: 0, recent: [], deals: {}, challenges: {}, masters: {}, specials: {}, endgames: {} };
 
 export const red = (card: Card) => card.suit === 1 || card.suit === 2;
@@ -33,7 +34,7 @@ export const foundationRank = (board: Board, suit: number) => board.foundations[
 export const nextFoundationRank = (board: Board, suit: number) => board.rules?.kind === 'reverse' ? 13 - board.foundations[suit] : board.foundations[suit] + 1;
 export const won = (board: Board) => board.foundations.every(rank => rank === 13);
 export function endgameCollectionTarget(challenge: EndgameChallenge) {
-  return challenge.version === 1 ? 4 : Math.ceil((52 - challenge.baseRank * 4) * .75);
+  return challenge.version === 1 ? 4 : Math.ceil((52 - challenge.baseRank * 4) * (challenge.version === 3 ? .9 : .75));
 }
 export function gameWon(game: Pick<Game, 'board' | 'endgame'>) {
   if (!game.endgame) return won(game.board);
@@ -49,9 +50,9 @@ export function gameWon(game: Pick<Game, 'board' | 'endgame'>) {
 export function validEndgame(value: unknown): value is EndgameChallenge {
   if (!value || typeof value !== 'object') return false;
   const item = value as EndgameChallenge;
-  return (item.version === 1 || item.version === 2) && typeof item.date === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(item.date) && Number.isFinite(Date.parse(`${item.date}T00:00:00Z`))
+  return (item.version === 1 || item.version === 2 || item.version === 3) && typeof item.date === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(item.date) && Number.isFinite(Date.parse(`${item.date}T00:00:00Z`))
     && ['finish', 'rescue', 'clear'].includes(item.kind) && Number.isInteger(item.baseRank)
-    && (item.version === 1 ? item.baseRank >= 7 && item.baseRank <= 9 : item.baseRank >= 3 && item.baseRank <= 4)
+    && (item.version === 1 ? item.baseRank >= 7 && item.baseRank <= 9 : item.version === 2 ? item.baseRank >= 3 && item.baseRank <= 4 : item.baseRank >= 1 && item.baseRank <= 2)
     && Number.isInteger(item.targetColumn) && item.targetColumn >= 0 && item.targetColumn < 8;
 }
 
@@ -292,7 +293,7 @@ export function validSpecialRule(value: unknown): value is SpecialRule {
 export function validSpecial(value: unknown): value is SpecialChallenge {
   if (!validSpecialRule(value)) return false;
   const rule = value as SpecialChallenge;
-  return rule.version === 1 && typeof rule.date === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(rule.date)
+  return (rule.version === 1 || rule.version === 2) && typeof rule.date === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(rule.date)
     && Number.isFinite(Date.parse(`${rule.date}T00:00:00Z`));
 }
 
@@ -351,7 +352,11 @@ export function loadStats(): Stats {
     if (stats && Number.isInteger(stats.played) && stats.played >= 0 && Number.isInteger(stats.won) && stats.won >= 0 && stats.won <= stats.played && Array.isArray(stats.completed) && stats.completed.every(id => typeof id === 'string') && [stats.bestSeconds, stats.bestMoves].every(n => n === null || (Number.isInteger(n) && n >= 0))) return {
       ...EMPTY_STATS, ...stats,
       xp: Number.isSafeInteger(stats.xp) && stats.xp >= 0 ? stats.xp : 0,
-      xpAwards: Array.isArray(stats.xpAwards) ? stats.xpAwards.filter(key => typeof key === 'string' && /^(deal:\d+|firstwin:\d{4}-\d{2}-\d{2}|speed:\d{4}-\d{2}-\d{2}:(60|120|180)|master:\d{4}-\d{2}-\d{2}|daily:\d{4}-\d{2}-\d{2}|special:\d{4}-\d{2}-\d{2}|precision:\d{4}-\d{2}-\d{2}|same-suit:\d{4}-\d{2}-\d{2}|reverse:\d{4}-\d{2}-\d{2}|endgame:\d{4}-\d{2}-\d{2}|month:\d{4}-\d{2}:\d+)$/.test(key)) : [],
+      difficultyWins: stats.difficultyWins && date(stats.difficultyWins.date) && stats.difficultyWins.counts && typeof stats.difficultyWins.counts === 'object' ? {
+        date: stats.difficultyWins.date,
+        counts: Object.fromEntries(Object.entries(stats.difficultyWins.counts).filter(([key, value]) => ['easy', 'medium', 'hard', 'expert'].includes(key) && Number.isSafeInteger(value) && value >= 0)),
+      } : undefined,
+      xpAwards: Array.isArray(stats.xpAwards) ? stats.xpAwards.filter(key => typeof key === 'string' && /^(classic:[a-zA-Z0-9-]+|deal:\d+|firstwin:\d{4}-\d{2}-\d{2}|speed:\d{4}-\d{2}-\d{2}:(60|120|180)|master:\d{4}-\d{2}-\d{2}|daily:\d{4}-\d{2}-\d{2}|special:\d{4}-\d{2}-\d{2}|precision:\d{4}-\d{2}-\d{2}|same-suit:\d{4}-\d{2}-\d{2}|reverse:\d{4}-\d{2}-\d{2}|endgame:\d{4}-\d{2}-\d{2}|month:\d{4}-\d{2}:\d+)$/.test(key)) : [],
       lastReward: stats.lastReward && typeof stats.lastReward.gameId === 'string' && integer(stats.lastReward.xp) ? stats.lastReward : undefined,
       achievements: stats.achievements && typeof stats.achievements === 'object' ? {
         unlocked: Object.fromEntries(Object.entries(stats.achievements.unlocked ?? {}).filter(([id, stamp]) => /^[a-z-]+$/.test(id) && typeof stamp === 'string' && Number.isFinite(Date.parse(stamp)))),
@@ -367,7 +372,7 @@ export function loadStats(): Stats {
       deals: stats.deals && typeof stats.deals === 'object' && !Array.isArray(stats.deals) ? Object.fromEntries(Object.entries(stats.deals).filter(([id, r]) => deal(Number(id)) && r && integer(r.attempts) && integer(r.wins) && r.wins <= r.attempts && best(r.bestMoves) && best(r.bestSeconds))) : {},
       challenges: stats.challenges && typeof stats.challenges === 'object' && !Array.isArray(stats.challenges) ? Object.fromEntries(Object.entries(stats.challenges).filter(([day, r]) => date(day) && r && deal(r.deal) && integer(r.bestMoves) && integer(r.bestSeconds) && typeof r.date === 'string')) : {},
       masters: stats.masters && typeof stats.masters === 'object' && !Array.isArray(stats.masters) ? Object.fromEntries(Object.entries(stats.masters).filter(([day, r]) => date(day) && r && deal(r.deal) && integer(r.bestMoves) && integer(r.bestSeconds) && typeof r.date === 'string')) : {},
-      specials: stats.specials && typeof stats.specials === 'object' && !Array.isArray(stats.specials) ? Object.fromEntries(Object.entries(stats.specials).filter(([day, r]) => (date(day) || /^(precision|same-suit|reverse):\d{4}-\d{2}-\d{2}$/.test(day)) && r && r.version === 1 && validSpecialRule(r) && integer(r.bestMoves) && integer(r.bestSeconds) && typeof r.date === 'string' && Number.isFinite(Date.parse(r.date)))) : {},
+      specials: stats.specials && typeof stats.specials === 'object' && !Array.isArray(stats.specials) ? Object.fromEntries(Object.entries(stats.specials).filter(([day, r]) => (date(day) || /^(precision|same-suit|reverse):\d{4}-\d{2}-\d{2}$/.test(day)) && r && (r.version === 1 || r.version === 2) && validSpecialRule(r) && integer(r.bestMoves) && integer(r.bestSeconds) && typeof r.date === 'string' && Number.isFinite(Date.parse(r.date)))) : {},
       endgames: stats.endgames && typeof stats.endgames === 'object' && !Array.isArray(stats.endgames) ? Object.fromEntries(Object.entries(stats.endgames).filter(([day, r]) => date(day) && r && ['finish', 'rescue', 'clear'].includes(r.kind) && integer(r.bestMoves) && integer(r.bestSeconds) && typeof r.date === 'string')) : {},
     };
   } catch { /* Fall back to an empty record. */ }
@@ -375,12 +380,12 @@ export function loadStats(): Stats {
 }
 
 export type Theme = 'felt' | 'midnight' | 'wine';
-export type Settings = { sequential: boolean; nextDeal: number; auto: boolean; landscape: boolean; cellsRight: boolean; large: boolean; singleTap: boolean; sound: boolean; haptics: boolean; volume: number; theme: Theme; photo: boolean };
-export const DEFAULT_SETTINGS: Settings = { sequential: false, nextDeal: 1, landscape: false, auto: true, cellsRight: true, large: false, singleTap: false, sound: false, haptics: false, volume: .25, theme: 'felt', photo: false };
+export type Settings = { sequential: boolean; nextDeal: number; auto: boolean; landscape: boolean; cellsRight: boolean; large: boolean; largeText: boolean; singleTap: boolean; sound: boolean; haptics: boolean; volume: number; theme: Theme; photo: boolean };
+export const DEFAULT_SETTINGS: Settings = { sequential: false, nextDeal: 1, landscape: false, auto: true, cellsRight: true, large: false, largeText: false, singleTap: false, sound: false, haptics: false, volume: .25, theme: 'felt', photo: false };
 export function loadSettings(): Settings {
   try {
     const settings = JSON.parse(localStorage.getItem(SETTINGS_KEY) || '{}');
-    return { sequential: settings.sequential === true, nextDeal: validDeal(settings.nextDeal) ? nextPlayableDeal(settings.nextDeal - 1) : 1, landscape: settings.landscape === true, auto: settings.auto !== false, cellsRight: settings.cellsRight !== false, large: settings.large === true, singleTap: settings.singleTap === true, sound: settings.sound === true, haptics: settings.haptics === true, volume: typeof settings.volume === 'number' && Number.isFinite(settings.volume) ? Math.max(0, Math.min(1, settings.volume)) : .25, theme: ['felt', 'midnight', 'wine'].includes(settings.theme) ? settings.theme : 'felt', photo: settings.photo === true };
+    return { sequential: settings.sequential === true, nextDeal: validDeal(settings.nextDeal) ? nextPlayableDeal(settings.nextDeal - 1) : 1, landscape: settings.landscape === true, auto: settings.auto !== false, cellsRight: settings.cellsRight !== false, large: settings.large === true, largeText: settings.largeText === true, singleTap: settings.singleTap === true, sound: settings.sound === true, haptics: settings.haptics === true, volume: typeof settings.volume === 'number' && Number.isFinite(settings.volume) ? Math.max(0, Math.min(1, settings.volume)) : .25, theme: ['felt', 'midnight', 'wine'].includes(settings.theme) ? settings.theme : 'felt', photo: settings.photo === true };
   } catch { return { ...DEFAULT_SETTINGS }; }
 }
 

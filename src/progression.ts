@@ -1,8 +1,8 @@
 import type { Game, Stats } from './game';
 import { today } from './calendar';
-import { dealDifficulty, difficultyInfo } from './difficulty';
+import { dealDifficulty, difficultyInfo, type Difficulty } from './difficulty';
 import { ENDGAME_XP } from './endgames';
-import { SPECIAL_XP, precisionXp, specialRecordKey, specialRewardKey } from './specialRules';
+import { SPECIAL_XP, specialRecordKey, specialRewardKey } from './specialRules';
 
 // Milestone titles inspired by Solitaire's frequent ranks and long-term masters.
 // These thresholds are this offline game's rules, not a Microsoft specification.
@@ -45,9 +45,14 @@ export function levelProgress(xp: number) {
   return { level, ...rank, current, required, fraction: current / required,
     nextTitleLevel, nextTitle: rankAtLevel(nextTitleLevel).title, nextTitleXp: xpAtLevel(nextTitleLevel) - xp };
 }
-export const DAILY_MASTER_XP = 2000;
+export const DAILY_MASTER_XP = 5000;
 export function firstWinAvailable(stats: Stats, date = today()) {
   return !stats.xpAwards.includes(`firstwin:${date}`);
+}
+
+export function difficultyReward(stats: Stats, difficulty: Difficulty, date = today()) {
+  const wins = stats.difficultyWins?.date === date ? stats.difficultyWins.counts[difficulty] ?? 0 : 0;
+  return { wins, xp: difficultyInfo(difficulty).xp * (wins + 1) };
 }
 
 export const SPEED_REWARDS = [
@@ -69,7 +74,7 @@ export function winRewards(stats: Stats, game: Game) {
     const date = today();
     const rewardKey = specialRewardKey(game.special);
     const available = game.special.date === date && !claimed.has(rewardKey) && !stats.specials[specialRecordKey(game.special)];
-    const base = game.special.kind === 'precision' ? precisionXp(game.special, game.moves) : SPECIAL_XP;
+    const base = SPECIAL_XP;
     const firstWinBonus = available && firstWinAvailable(stats, date) ? base : 0;
     if (available) {
       award(rewardKey, base);
@@ -88,6 +93,24 @@ export function winRewards(stats: Stats, game: Game) {
     return { xp: stats.xp + xp, xpAwards: [...claimed], lastReward: { gameId: game.id, xp, firstWinBonus } };
   }
   const completionDate = today();
+  if (!game.masterDate) {
+    const difficulty = dealDifficulty(game.deal);
+    const { wins, xp: base } = difficultyReward(stats, difficulty, completionDate);
+    const rewardKey = `classic:${game.id}`;
+    if (claimed.has(rewardKey) || stats.completed.includes(game.id)) {
+      return { xp: stats.xp, xpAwards: [...claimed], lastReward: { gameId: game.id, xp: 0 } };
+    }
+    const firstWinBonus = firstWinAvailable(stats, completionDate) ? base : 0;
+    const speed = speedReward(game.seconds);
+    const speedBonus = speed && speedRewardAvailable(stats, speed.seconds, completionDate) ? Math.round(base * speed.rate) : 0;
+    award(rewardKey, base);
+    if (firstWinBonus) award(`firstwin:${completionDate}`, firstWinBonus);
+    if (speedBonus && speed) award(`speed:${completionDate}:${speed.seconds}`, speedBonus);
+    const counts = stats.difficultyWins?.date === completionDate ? stats.difficultyWins.counts : {};
+    return { xp: stats.xp + xp, xpAwards: [...claimed],
+      difficultyWins: { date: completionDate, counts: { ...counts, [difficulty]: wins + 1 } },
+      lastReward: { gameId: game.id, xp, firstWinBonus, speedBonus } };
+  }
   const dailyMaster = game.masterDate === completionDate;
   const base = dailyMaster ? DAILY_MASTER_XP : difficultyInfo(dealDifficulty(game.deal)).xp;
   const rewardKey = dailyMaster ? `master:${completionDate}` : `deal:${game.deal}`;

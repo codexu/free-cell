@@ -11,6 +11,7 @@ export function usePixiMotion(board: Board) {
   const actions = useMemo(() => ({
     isBusy: () => busyRef.current,
     capture: (_release?: undefined, history = false, steps: Board[] = []) => { onBusy(true); controller.current?.prepare(history, steps); },
+    preview: (steps: Board[]) => controller.current?.preview(steps) ?? Promise.resolve(false),
     cancel: () => controller.current?.cancel(),
     attach, onBusy,
   }), [attach, onBusy]);

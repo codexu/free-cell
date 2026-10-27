@@ -11,6 +11,9 @@ import './dialogs.css';
 import './pixi.css';
 import './endgames.css';
 import './gameplay-badges.css';
+import './large-text.css';
+import './win-rewards.css';
+import './solvability.css';
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode><App /></React.StrictMode>,

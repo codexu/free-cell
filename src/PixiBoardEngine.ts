@@ -5,12 +5,13 @@ import { canMove, moveBoard, picked, sequence, won, type Board, type Move, type 
 import { createCardTextures, SUIT_PATHS, CARD_TEXTURE_WIDTH, CARD_TEXTURE_HEIGHT, CARD_SHADOW_PADDING, CARD_CORNER_RADIUS } from './pixiCardTextures';
 import { contains, layoutBoard, type BoardLayout, type CardPose, type LayoutOptions } from './pixiBoardLayout';
 
-export type PixiBoardState = { board: Board; gameId: string; targetColumn?: number; selection: Source | null; suggestion: Move | null; disabled: boolean; paused: boolean; compact: boolean; landscape: boolean; rotated: boolean; cellsRight: boolean; large: boolean; onCard: (source: Source) => void; onTarget: (target: Target) => void; onBlank: () => void; onHintEnd: (move: Move) => void; onDrop: (source: Source, target: Target | null) => boolean; onDrag: (active: boolean, source?: Source) => void };
-export interface PixiBoardController { prepare: (history?: boolean, steps?: Board[]) => void; cancel: () => void; }
+export type PixiBoardState = { board: Board; gameId: string; targetColumn?: number; selection: Source | null; suggestion: Move | null; disabled: boolean; paused: boolean; compact: boolean; landscape: boolean; rotated: boolean; cellsRight: boolean; large: boolean; largeText: boolean; onCard: (source: Source) => void; onTarget: (target: Target) => void; onBlank: () => void; onHintEnd: (move: Move) => void; onDrop: (source: Source, target: Target | null) => boolean; onDrag: (active: boolean, source?: Source) => void };
+export interface PixiBoardController { prepare: (history?: boolean, steps?: Board[]) => void; preview: (steps: Board[]) => Promise<boolean>; cancel: () => void; }
 type View = { node: Container; shadow: Sprite; face: Sprite; edge: Graphics; strokeWidth: number };
 type Tween = { id: number; from: CardPose; to: CardPose; delay: number; shake?: boolean };
 type HintGhost = { node: Container; from: CardPose; to: CardPose };
 type Drag = { pointerId: number; from: Source; ids: number[]; downX: number; downY: number; active: boolean; original: Map<number, CardPose>; rect: DOMRect };
+type Preview = { resolve: (completed: boolean) => void; duration: number; board: Board; restoring: boolean; timer: ReturnType<typeof setTimeout> | null };
 const samePose = (a: CardPose, b: CardPose) => Math.abs(a.x - b.x) < .1 && Math.abs(a.y - b.y) < .1 && Math.abs(a.width - b.width) < .1;
 const mix = (a: number, b: number, t: number) => a + (b - a) * t;
 
@@ -44,6 +45,7 @@ export class PixiBoardEngine implements PixiBoardController {
   private startTime = 0;
   private duration = 0;
   private finishing = false;
+  private previewSession: Preview | null = null;
   private speedPointer: number | null = null;
   private playbackRate = 1;
   private frame: number | null = null;
@@ -66,7 +68,7 @@ export class PixiBoardEngine implements PixiBoardController {
       const node = new Container();
       const shadow = new Sprite(this.textures.shadow);
       shadow.position.set(-CARD_SHADOW_PADDING, -CARD_SHADOW_PADDING);
-      const face = new Sprite(this.textures.get(id, this.state.large));
+      const face = new Sprite(this.textures.get(id, this.state.large, this.state.largeText));
       const edge = new Graphics();
       node.addChild(shadow, face, edge); this.cards.addChild(node); this.views.set(id, { node, shadow, face, edge, strokeWidth: 0 });
     }
@@ -85,7 +87,13 @@ export class PixiBoardEngine implements PixiBoardController {
     if (!this.ready || this.disposed) return;
     if (state.paused) this.releaseSpeed();
     if (state.disabled && this.drag) this.cancelDrag();
-    const geometryChanged = previous.compact !== state.compact || previous.landscape !== state.landscape || previous.rotated !== state.rotated || previous.cellsRight !== state.cellsRight || previous.large !== state.large;
+    const geometryChanged = previous.compact !== state.compact || previous.landscape !== state.landscape || previous.rotated !== state.rotated || previous.cellsRight !== state.cellsRight || previous.large !== state.large || previous.largeText !== state.largeText;
+    // A verification only borrows the sprites. React continues to supply the
+    // real board throughout, so unrelated renders must not replace its queue.
+    if (this.previewSession) {
+      if (geometryChanged || state.gameId !== this.gameId || state.board !== this.board) this.snap();
+      return;
+    }
     if (state.gameId !== this.gameId) {
       this.clearAnimation(); this.cancelDrag(); this.gameId = state.gameId; this.board = state.board;
       const next = this.makeLayout(state.board); this.layout = next; this.drawDecorations(next);
@@ -104,9 +112,23 @@ export class PixiBoardEngine implements PixiBoardController {
     }
     if (previous.suggestion !== state.suggestion || previous.disabled !== state.disabled) this.startHint();
   }
-  prepare(history = false, steps: Board[] = []) { this.clearHint(); this.pending = { history, steps }; this.setBusy(true); }
+  prepare(history = false, steps: Board[] = []) { if (this.previewSession) return; this.clearHint(); this.pending = { history, steps }; this.setBusy(true); }
+  preview(steps: Board[]): Promise<boolean> {
+    if (!this.ready || this.disposed || this.busy || this.previewSession) return Promise.resolve(false);
+    if (!steps.length || this.reduced.matches || document.hidden) return Promise.resolve(true);
+    this.clearAnimation(); this.cancelDrag();
+    // Long solutions retain real route positions and their final goal while
+    // compressing the demonstration to at most 160 visual transitions.
+    const stride = Math.max(1, Math.ceil(steps.length / 160));
+    const frames = steps.filter((_, index) => (index + 1) % stride === 0 || index === steps.length - 1);
+    return new Promise<boolean>(resolve => {
+      this.previewSession = { resolve, duration: Math.max(16, Math.min(65, 2600 / frames.length)), board: this.state.board, restoring: false, timer: null };
+      this.queue = [...frames, this.state.board];
+      this.setBusy(true); this.next(false);
+    });
+  }
   cancel() { if (this.ready) this.snap(); else this.pending = null; }
-  private options(): LayoutOptions { return { width: this.width, height: this.height, compact: this.state.compact, landscape: this.state.landscape, cellsRight: this.state.cellsRight, large: this.state.large }; }
+  private options(): LayoutOptions { return { width: this.width, height: this.height, compact: this.state.compact, landscape: this.state.landscape, cellsRight: this.state.cellsRight, large: this.state.large, largeText: this.state.largeText }; }
   private makeLayout(board: Board) { return layoutBoard(board, this.options()); }
   private setBusy(value: boolean) { this.busy = value; this.onBusy(value); }
   private clearAnimation() { this.releaseSpeed(); this.finishing = false; this.clearHint(); this.queue = []; this.tweens = []; this.pending = null; }
@@ -129,11 +151,16 @@ export class PixiBoardEngine implements PixiBoardController {
     this.width = width; this.height = height; this.app.renderer.resize(width, height); this.snap();
   }
   private snap() {
+    const preview = this.previewSession; this.previewSession = null;
+    if (preview && preview.timer !== null) clearTimeout(preview.timer);
     this.clearAnimation(); this.cancelDrag();
     this.board = this.state.board; this.gameId = this.state.gameId;
     this.layout = this.makeLayout(this.board); this.poses = new Map(this.layout.poses);
     for (const [id, pose] of this.poses) this.place(id, pose);
-    this.drawDecorations(this.layout); this.setBusy(false); this.startHint(); this.requestFrame();
+    this.drawDecorations(this.layout); this.setBusy(false); this.startHint();
+    // Finish restoration on the canvas before callers unlock the real game.
+    if (preview) this.app.render();
+    this.requestFrame(); preview?.resolve(false);
   }
   private clearHint() {
     for (const ghost of this.hintGhosts) ghost.node.destroy({ children: true });
@@ -156,7 +183,7 @@ export class PixiBoardEngine implements PixiBoardController {
       const node = new Container();
       const shadow = new Sprite(this.textures!.shadow);
       shadow.position.set(-CARD_SHADOW_PADDING + 4, -CARD_SHADOW_PADDING + 6); shadow.alpha = .45;
-      const face = new Sprite(this.textures!.get(card.id, this.state.large));
+      const face = new Sprite(this.textures!.get(card.id, this.state.large, this.state.largeText));
       node.addChild(shadow, face); node.alpha = 0;
       this.hintLayer.addChild(node); this.hintGhosts.push({ node, from, to });
     }
@@ -184,7 +211,7 @@ export class PixiBoardEngine implements PixiBoardController {
     view.node.position.set(pose.x, pose.y); view.node.scale.set(pose.width / CARD_TEXTURE_WIDTH, pose.height / CARD_TEXTURE_HEIGHT);
     view.node.zIndex = (floating ? 10000 : 0) + pose.order;
     view.node.visible = pose.visible || floating;
-    view.face.texture = this.textures!.get(id, this.state.large);
+    view.face.texture = this.textures!.get(id, this.state.large, this.state.largeText);
     view.face.tint = pose.covered ? 0xb9c4b7 : 0xffffff;
     const strokeWidth = CARD_TEXTURE_WIDTH / pose.width;
     if (Math.abs(view.strokeWidth - strokeWidth) > .001) {
@@ -196,12 +223,28 @@ export class PixiBoardEngine implements PixiBoardController {
     view.shadow.alpha = floating ? 1 : .85;
   }
   private next(history: boolean) {
+    const preview = this.previewSession;
+    if (preview && this.queue.length === 1 && !preview.restoring) {
+      preview.restoring = true;
+      preview.timer = setTimeout(() => {
+        if (this.previewSession !== preview) return;
+        preview.timer = null; this.next(false);
+      }, 260);
+      return;
+    }
     const board = this.queue.shift();
-    if (!board) { this.releaseSpeed(); this.finishing = false; this.setBusy(false); this.requestFrame(); return; }
+    if (!board) {
+      if (preview) {
+        this.previewSession = null; this.snap(); this.app.render(); preview.resolve(true);
+      } else { this.releaseSpeed(); this.finishing = false; this.setBusy(false); this.requestFrame(); }
+      return;
+    }
+    if (preview) preview.board = board;
     this.begin(this.makeLayout(board), history);
   }
   private begin(layout: BoardLayout, history: boolean, dealing = false) {
     this.clearHint();
+    if (this.previewSession && (this.reduced.matches || document.hidden)) { this.snap(); return; }
     this.layout = layout; this.drawDecorations(layout);
     if (this.reduced.matches || document.hidden) {
       this.poses = new Map(layout.poses); for (const [id, pose] of this.poses) this.place(id, pose);
@@ -216,7 +259,7 @@ export class PixiBoardEngine implements PixiBoardController {
         this.place(id, from, true);
       } else { this.poses.set(id, to); this.place(id, to); }
     }
-    this.duration = dealing ? 360 : history ? 240 : this.queue.length ? 180 : 230;
+    this.duration = this.previewSession ? this.previewSession.restoring ? 180 : this.previewSession.duration : dealing ? 360 : history ? 240 : this.queue.length ? 180 : 230;
     this.startTime = performance.now(); this.setBusy(true);
     if (!this.tweens.length) { this.next(history); return; }
     this.requestFrame();
@@ -244,9 +287,10 @@ export class PixiBoardEngine implements PixiBoardController {
     if (active) this.requestFrame();
   };
   private drawDecorations(layout: BoardLayout) {
-    const rules = this.state.board.rules;
-    const priorityLocked = rules?.kind === 'suit-first' && this.state.board.foundations[rules.prioritySuit] < 13;
-    const key = JSON.stringify([layout.targets, this.state.targetColumn, rules, priorityLocked]);
+    const board = this.previewSession?.board ?? this.state.board;
+    const rules = board.rules;
+    const priorityLocked = rules?.kind === 'suit-first' && board.foundations[rules.prioritySuit] < 13;
+    const key = JSON.stringify([layout.targets, layout.labels, this.state.largeText, this.state.targetColumn, rules, priorityLocked]);
     if (key === this.decorationKey) {
       layout.labels.forEach((value, index) => {
         const label = this.labelViews[index];
@@ -268,21 +312,21 @@ export class PixiBoardEngine implements PixiBoardController {
     if (targetColumn) {
       this.slots.roundRect(targetColumn.x + 1, targetColumn.y + 1, Math.max(1, targetColumn.width - 2), Math.max(1, targetColumn.height - 2), 5)
         .fill({ color: 0xe4c77d, alpha: .06 }).stroke({ color: 0xe4c77d, alpha: .8, width: 2 });
-      label('目标', targetColumn.x + targetColumn.width / 2, targetColumn.y + targetColumn.height - 18, 10, true, 0xe4c77d);
+      label('目标', targetColumn.x + targetColumn.width / 2, targetColumn.y + targetColumn.height - (this.state.largeText ? 26 : 18), this.state.largeText ? 16 : 10, true, 0xe4c77d);
     }
     for (const { target, box } of layout.targets) {
       if (target.kind === 'column') continue;
       this.slots.roundRect(box.x + 1, box.y + 1, box.width - 2, box.height - 2, box.width * CARD_CORNER_RADIUS / CARD_TEXTURE_WIDTH).fill({ color: 0x102f25, alpha: .12 }).stroke({ color: 0xc2d4ad, alpha: .4, width: 1 });
       if (target.kind === 'cell' && rules?.kind === 'three-cells' && target.index === 3) {
         this.slots.roundRect(box.x + 2, box.y + 2, box.width - 4, box.height - 4, 4).fill({ color: 0x102f25, alpha: .65 });
-        label('封印', box.x + box.width / 2, box.y + box.height * .42, Math.min(13, box.width * .25), true, 0x9eaf9d);
+        label('封印', box.x + box.width / 2, box.y + box.height * .42, Math.min(this.state.largeText ? 18 : 13, box.width * (this.state.largeText ? .4 : .25)), true, 0x9eaf9d);
         continue;
       }
       if (target.kind === 'foundation') {
         const centerX = box.x + box.width / 2;
         // Fixed vector silhouettes avoid platform emoji colors and font metrics.
         const suitSize = Math.min(22, box.width * .42, box.height * .27);
-        const range = label(priorityLocked && target.index !== rules?.prioritySuit ? '待解锁' : rules?.kind === 'suit-first' && target.index === rules.prioritySuit ? '优先 A–K' : rules?.kind === 'reverse' ? 'K–A' : 'A–K', centerX, 0, Math.min(10, box.width * .19), true);
+        const range = label(priorityLocked && target.index !== rules?.prioritySuit ? '待解锁' : rules?.kind === 'suit-first' && target.index === rules.prioritySuit ? '优先 A–K' : rules?.kind === 'reverse' ? 'K–A' : 'A–K', centerX, 0, Math.min(this.state.largeText ? 16 : 10, box.width * (this.state.largeText ? (priorityLocked ? .24 : .3) : .19)), true);
         const gap = Math.min(8, box.width * .12);
         const top = box.y + (box.height - suitSize - gap - range.height) / 2;
         const icon = new Graphics().svg(`<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 100 100"><path d="${SUIT_PATHS[target.index]}" fill="#9eaf9d"/></svg>`);
@@ -317,6 +361,7 @@ export class PixiBoardEngine implements PixiBoardController {
   }
 
   private pointerDown = (event: PointerEvent) => {
+    if (this.previewSession) return;
     if (event.isPrimary && event.button === 0 && this.busy && this.finishing && !this.state.paused) {
       event.preventDefault();
       this.speedPointer = event.pointerId; this.canvas.setPointerCapture(event.pointerId);
@@ -373,9 +418,10 @@ export class PixiBoardEngine implements PixiBoardController {
   private lostCapture = (event: PointerEvent) => { if (event.pointerId === this.speedPointer) this.releaseSpeed(); if (this.drag) this.cancelDrag(); };
   private motionPreference = () => { if (this.reduced.matches) this.snap(); };
   private visibility = () => { if (document.hidden) this.snap(); };
-  private blur = () => { this.releaseSpeed(); };
+  private blur = () => { if (this.previewSession) this.snap(); else this.releaseSpeed(); };
   destroy() {
     if (this.disposed) return;
+    if (this.previewSession) this.snap();
     this.releaseSpeed();
     this.disposed = true; this.observer?.disconnect();
     if (this.frame !== null) cancelAnimationFrame(this.frame);

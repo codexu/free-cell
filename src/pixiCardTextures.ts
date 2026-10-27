@@ -7,6 +7,7 @@ export const CARD_SHADOW_PADDING = 20;
 export const CARD_HEADER_TOP = 18;
 export const CARD_LABEL_RATIO = .297;
 export const CARD_LARGE_LABEL_RATIO = .324;
+export const CARD_ACCESSIBLE_LABEL_RATIO = .40;
 export const CARD_CORNER_RADIUS = 22;
 export const SUIT_PATHS = [
   'M50 4a20 20 0 0 0-15 33A22 22 0 1 0 41 72c-1 12-5 17-13 22h44c-8-5-12-10-13-22a22 22 0 1 0 6-35A20 20 0 0 0 50 4Z',
@@ -123,7 +124,7 @@ export function createCardTextures() {
   const shadow = Texture.from(shadowCanvas);
   const atlases: Texture[] = [];
   const textures: Texture[][] = [];
-  for (const large of [false, true]) {
+  for (const labelRatio of [CARD_LABEL_RATIO, CARD_LARGE_LABEL_RATIO, CARD_ACCESSIBLE_LABEL_RATIO]) {
     const canvas = document.createElement('canvas');
     canvas.width = CARD_TEXTURE_WIDTH * 13; canvas.height = CARD_TEXTURE_HEIGHT * 4;
     const context = canvas.getContext('2d');
@@ -136,7 +137,7 @@ export function createCardTextures() {
       // the face would shrink it below a pixel on narrow mobile cards.
       context.fillStyle = card.suit === 1 || card.suit === 2 ? '#c6263c' : '#17212b';
       // Rank and header suit have the same size. Only one central suit.
-      const label = CARD_TEXTURE_WIDTH * (large ? CARD_LARGE_LABEL_RATIO : CARD_LABEL_RATIO);
+      const label = CARD_TEXTURE_WIDTH * labelRatio;
       rank(context, rankName(card.rank), label);
       suit(context, paths[card.suit], bounds[card.suit], CARD_TEXTURE_WIDTH - label - 12, CARD_HEADER_TOP, label);
       const emblem = CARD_TEXTURE_WIDTH * .495;
@@ -146,5 +147,5 @@ export function createCardTextures() {
     const atlas = Texture.from(canvas); atlases.push(atlas);
     textures.push(Array.from({ length: 52 }, (_, id) => new Texture({ source: atlas.source, frame: new Rectangle(Math.floor(id / 4) * CARD_TEXTURE_WIDTH, id % 4 * CARD_TEXTURE_HEIGHT, CARD_TEXTURE_WIDTH, CARD_TEXTURE_HEIGHT) })));
   }
-  return { shadow, get: (id: number, large: boolean) => textures[large ? 1 : 0][id], destroy: () => { textures.flat().forEach(texture => texture.destroy(false)); atlases.forEach(texture => texture.destroy(true)); shadow.destroy(true); } };
+  return { shadow, get: (id: number, large: boolean, largeText: boolean) => textures[largeText ? 2 : large ? 1 : 0][id], destroy: () => { textures.flat().forEach(texture => texture.destroy(false)); atlases.forEach(texture => texture.destroy(true)); shadow.destroy(true); } };
 }

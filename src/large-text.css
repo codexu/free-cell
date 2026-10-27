@@ -1,0 +1,220 @@
+/* Every text size keeps its existing responsive fallback when this mode is off. */
+.app.large-text {
+  font-size: 18px;
+  --text-6: 16px;
+  --text-7: 16px;
+  --text-8: 16px;
+  --text-9: 16px;
+  --text-10: 16px;
+  --text-11: 16px;
+  --text-12: 16px;
+  --text-13: 18px;
+  --text-14: 19px;
+  --text-15: 20px;
+  --text-16: 22px;
+  --text-17: 23px;
+  --text-18: 24px;
+  --text-19: 26px;
+  --text-20: 27px;
+  --text-21: 28px;
+  --text-22: 30px;
+  --text-23: 31px;
+  --text-24: 32px;
+  --text-25: 34px;
+  --text-26: 35px;
+  --text-27: 36px;
+  --text-29: 39px;
+  --text-30: 40px;
+  --text-33: 45px;
+  --text-34: 46px;
+  --text-36: 49px;
+  --text-42: 57px;
+  --text-51: 69px;
+  --text-52: 70px;
+}
+
+.app.large-text .modal {width:min(100%,560px);line-height:1.6}
+.app.large-text .modal-close {width:44px;height:44px;top:10px;right:10px}
+.app.large-text .modal h2 {padding-right:24px}
+.app.large-text .setting-row {gap:16px;min-height:76px}
+.app.large-text .setting-row>span:first-child {min-width:0;flex:1}
+.app.large-text .switch {width:48px;height:28px;padding:4px}
+.app.large-text .switch>span {width:20px;height:20px}
+.app.large-text .switch.on>span {margin-left:20px}
+.app.large-text .primary,.app.large-text .secondary {min-height:52px}
+.app.large-text .menu-list button {min-height:60px;line-height:1.5}
+.app.large-text .menu-list button svg:last-child {flex-shrink:0}
+.app.large-text .panel-tabs {display:grid;grid-template-columns:1fr;gap:4px}
+.app.large-text .panel-tabs button {min-width:0;min-height:48px;white-space:normal;line-height:1.5}
+.app.large-text .achievement-list {grid-template-columns:1fr}
+.app.large-text .achievement-heading,.app.large-text .record-row b,
+.app.large-text .level-heading,.app.large-text .personal-best,
+.app.large-text .game-meta,.app.large-text .deal-label,
+.app.large-text .bottom-meta {flex-wrap:wrap}
+.app.large-text .achievement-card {align-items:flex-start}
+.app.large-text .record-row>div {min-width:0;overflow-wrap:anywhere}
+.app.large-text .record-search,.app.large-text .volume-row {flex-wrap:wrap}
+.app.large-text .volume-row input {flex:1 1 120px;min-height:44px}
+.app.large-text .deal-input {height:54px}
+.app.large-text .deal-input button {width:40px;height:40px;flex-shrink:0}
+.app.large-text .numbered-deal-form {grid-template-columns:1fr;row-gap:8px}
+.app.large-text .speed-rewards>div {display:grid;grid-template-columns:1fr;gap:8px}
+.app.large-text .speed-rewards>div>span {display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px;min-width:0;text-align:left}
+.app.large-text .daily-game-entry {display:grid;grid-template-columns:38px minmax(0,1fr) 20px;gap:6px 10px;align-items:start}
+.app.large-text .daily-game-copy {grid-column:2;grid-row:1;min-width:0}
+.app.large-text .daily-game-reward {grid-column:2;grid-row:2;text-align:left;margin:0;min-width:0}
+.app.large-text .monthly-badges {grid-template-columns:repeat(2,minmax(0,1fr))}
+.app.large-text .level-overview-grid {grid-template-columns:repeat(2,minmax(0,1fr))}
+.app.large-text .badge-carousel-item {flex-basis:33.333%}
+.app.large-text .badge-carousel-item>small,
+.app.large-text .badge-carousel-item>span:not(.badge-emblem) {white-space:normal;text-align:center}
+.app.large-text .player-details {width:auto;max-width:none}
+.app.large-text .player-title {display:grid;grid-template-columns:max-content minmax(0,1fr);align-items:baseline;gap:8px;line-height:24px}
+.app.large-text .player-title>span {white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+/* Reserve one line even without a message. Resizing the canvas resets card
+   motion and pointer capture, so feedback must never change the board height. */
+.app.large-text .status-line {height:32px;min-height:32px;max-height:32px;flex:0 0 32px;line-height:24px;padding:4px 0;align-items:flex-start;overflow:hidden}
+.app.large-text .status-line>span:last-child {display:block;white-space:nowrap;min-width:0;max-width:100%;overflow:hidden;text-overflow:ellipsis}
+.app.large-text .level-line {height:auto;min-height:32px;padding:4px 0}
+.app.large-text .level-compact {flex-wrap:wrap;gap:6px 10px}
+.app.large-text .toolbar {flex-wrap:wrap}
+.app.large-text .tool-button,.app.large-text .toolbar .new-button {min-height:50px;white-space:nowrap;line-height:24px}
+.app.large-text .pixi-finish-hint {max-width:calc(100% - 16px);white-space:normal;text-align:center}
+
+@media (max-width:700px), (pointer:coarse) and (max-width:1100px) {
+  .app.large-text .header {flex-wrap:wrap;gap:4px 8px}
+  .app.large-text .player-profile {flex:1 1 calc(100% - 56px)}
+  .app.large-text .player-details>small {display:block}
+  .app.large-text .player-title>span {display:inline}
+  .app.large-text .header-actions {order:1}
+  .app.large-text .header-actions .menu-button {width:44px;height:44px}
+  .app.large-text .mobile-meta {display:grid;grid-template-columns:minmax(0,1fr) max-content;order:2;width:100%;margin-left:0;gap:8px;align-items:center}
+  .app.large-text .mobile-deal {align-items:flex-start;min-width:0;white-space:nowrap;text-align:left;line-height:24px}
+  .app.large-text .mobile-meta button {padding:4px 0}
+  .app.large-text .toolbar {display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:4px}
+  .app.large-text .tool-button,.app.large-text .toolbar .new-button {flex-direction:column;gap:4px;padding:6px 2px}
+  .app.large-text .modal {padding:32px 20px}
+}
+
+.app.large-text.landscape-layout {grid-template-columns:180px minmax(0,1fr);column-gap:10px}
+.app.large-text.landscape-layout .header {gap:6px;padding-bottom:8px}
+.app.large-text.landscape-layout .player-profile {flex:none}
+.app.large-text.landscape-layout .mobile-meta {grid-template-columns:1fr 1fr;width:100%}
+.app.large-text.landscape-layout .mobile-deal {align-items:center;text-align:center;min-width:0;line-height:24px}
+.app.large-text.landscape-layout .toolbar {grid-template-columns:1fr}
+.app.large-text.landscape-layout .tool-button,
+.app.large-text.landscape-layout .toolbar .new-button {flex-direction:row;min-height:44px;padding:8px;gap:8px}
+.app.large-text.landscape-layout .status-line {flex:0 0 32px;overflow:hidden}
+.app.large-text.landscape-layout .modal {width:100%;max-width:1120px;padding:0}
+.app.large-text.landscape-layout .modal-body {overflow-y:auto;display:block;height:100%;padding:18px 62px 18px 18px}
+.app.large-text.landscape-layout .dialog-layout {display:block}
+.app.large-text.landscape-layout .dialog-summary,
+.app.large-text.landscape-layout .dialog-content {overflow:visible;padding:0;min-height:auto;border:0}
+.app.large-text.landscape-layout .dialog-content {margin-top:20px}
+.app.large-text.landscape-layout .menu-list {grid-template-columns:1fr}
+.app.large-text.landscape-layout .modal-body>.back-button {position:static;width:auto;height:auto;font-size:18px;justify-content:flex-start;background:none;border:0;margin-bottom:16px}
+.app.large-text.landscape-layout .modal-close {width:44px;height:44px;right:8px}
+.app.large-text.landscape-layout .modal-rules .rules {grid-template-columns:1fr}
+.app.large-text.landscape-layout .stats-dialog .achievement-card {flex-direction:row}
+.app.large-text.landscape-layout .stats-dialog .dialog-content>.panel-tabs {position:static}
+.app.large-text.landscape-layout .clear-data-confirm {overflow:visible;padding:0}
+.app.large-text.landscape-layout .clear-data-confirm>.primary,
+.app.large-text.landscape-layout .clear-data-confirm>.secondary {display:flex;width:100%;margin-left:0}
+
+/* Content layout follows the dialog width, including rotated phone screens. */
+.app.large-text .modal {container-type:inline-size}
+.app.large-text .theme-grid,.app.large-text .difficulty-grid {grid-template-columns:1fr}
+.app.large-text .theme-tile {flex-direction:row;gap:12px;text-align:left;min-height:56px}
+.app.large-text .theme-swatch {width:56px;flex-shrink:0}
+.app.large-text .modal-new .difficulty-grid button {gap:12px;padding:12px;min-height:72px}
+.app.large-text .difficulty-copy b {white-space:nowrap;line-height:1.5}
+.app.large-text .difficulty-copy small {white-space:normal;line-height:1.5}
+.app.large-text .speed-rewards strong {margin:0;white-space:nowrap;flex-shrink:0}
+.app.large-text .daily-game-entry>.gameplay-badge {grid-column:1;grid-row:1 / 3;width:38px;height:40px}
+.app.large-text .daily-game-entry>svg:last-child {grid-column:3;grid-row:1 / 3;align-self:center}
+.app.large-text .daily-game-reward strong {white-space:normal;line-height:1.5;overflow-wrap:anywhere}
+.app.large-text .daily-game-copy b,.app.large-text .daily-game-copy small {line-height:1.6;overflow-wrap:anywhere}
+.app.large-text .menu-list button {display:grid;grid-template-columns:28px minmax(0,1fr) 20px;gap:12px;padding:12px 8px;align-items:center}
+.app.large-text .menu-label {min-width:0;line-height:1.6;overflow-wrap:anywhere}
+.app.large-text .menu-list button svg:last-child {margin:0;justify-self:end}
+.app.large-text .menu-list button>.gameplay-badge {width:28px;height:30px}
+.app.large-text .modal h2 {line-height:1.45;overflow-wrap:anywhere;letter-spacing:0}
+.app.large-text .modal :is(p,small,.notice,.fine-print) {overflow-wrap:anywhere}
+.app.large-text .eyebrow {letter-spacing:1px}
+.app.large-text .modal :is(.primary,.secondary) {min-height:52px;line-height:1.6;white-space:normal;overflow-wrap:anywhere}
+.app.large-text .setting-row {display:grid;grid-template-columns:minmax(0,1fr) 48px;align-items:start}
+.app.large-text .setting-row .switch {margin-top:4px}
+.app.large-text .setting-row b {line-height:1.5}
+.app.large-text .setting-row small {line-height:1.7}
+.app.large-text .volume-row {display:grid;grid-template-columns:minmax(0,1fr) max-content;gap:8px 12px}
+.app.large-text .volume-row label {grid-column:1 / -1;white-space:normal}
+.app.large-text .volume-row input {width:100%;min-width:0}
+.app.large-text .level-progress:not(.level-compact) {display:grid;grid-template-columns:48px minmax(0,1fr);gap:8px 12px}
+.app.large-text .level-progress:not(.level-compact)::after {display:none}
+.app.large-text .level-progress>.badge-emblem {float:none;margin:0;grid-column:1;grid-row:1 / 3;align-self:center}
+.app.large-text .level-progress:not(.level-compact) .level-heading {display:flex;flex-direction:column;align-items:flex-start;gap:4px;grid-column:2;min-width:0;line-height:1.5}
+.app.large-text .level-heading>span {white-space:normal;overflow-wrap:anywhere}
+.app.large-text .level-progress:not(.level-compact)>.xp-track {grid-column:2;margin:0}
+.app.large-text .level-progress>:is(p,dl,small) {grid-column:1 / -1;min-width:0}
+.app.large-text .level-best-results {grid-template-columns:1fr}
+.app.large-text .level-overview-grid dd {overflow-wrap:anywhere}
+.app.large-text .player-details {min-width:0;flex:1}
+.app.large-text .player-title b {white-space:nowrap}
+.app.large-text .player-details>small {white-space:nowrap;line-height:24px}
+.app.large-text .mobile-deal>span,.app.large-text .mobile-deal>small {display:block;width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;line-height:24px}
+.app.large-text .mobile-meta>button:not(.mobile-deal) {white-space:nowrap}
+.app.large-text .landscape-moves {white-space:nowrap}
+/* Keep only the challenge heading on the board; full goals live in Rules. */
+.app.large-text .endgame-objective {height:32px;min-height:32px;flex:0 0 32px;padding:3px 8px;gap:0;margin-bottom:4px;overflow:hidden;align-items:flex-start;text-align:left}
+.app.large-text .endgame-objective>b {display:block;width:100%;min-width:0;line-height:24px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.app.large-text .endgame-objective>span {display:none}
+.app.large-text.landscape-layout .endgame-objective {padding:3px 4px;margin-top:4px}
+.app.large-text .tool-button>span,.app.large-text .new-button>span {white-space:nowrap}
+.app.large-text .achievement-summary {flex-direction:column;align-items:flex-start;gap:4px}
+.app.large-text .achievement-heading {display:flex;flex-direction:column;align-items:flex-start;gap:4px}
+.app.large-text .achievement-heading>b {line-height:1.5}
+.app.large-text .achievement-count {white-space:normal;overflow-wrap:anywhere}
+.app.large-text .achievement-card-foot {flex-direction:column;align-items:flex-start;gap:4px}
+.app.large-text .achievement-filters button {min-height:44px;padding:8px 12px;line-height:1.5;white-space:nowrap}
+.app.large-text .achievement-unlocks>div {display:grid;grid-template-columns:1fr}
+.app.large-text .achievement-unlocks>b {flex-wrap:wrap;line-height:1.5}
+.app.large-text .achievement-unlocks>b>span {margin-left:0;white-space:nowrap}
+.app.large-text .achievement-unlocks article>span:last-child {min-width:0;overflow-wrap:anywhere}
+.app.large-text .record-row {display:grid;grid-template-columns:minmax(0,1fr);gap:10px;align-items:start}
+.app.large-text .record-row button {justify-self:start;min-height:44px;white-space:nowrap}
+.app.large-text .record-row b {display:block;line-height:1.6}
+.app.large-text .record-row b small {display:block;width:fit-content;margin-top:4px}
+.app.large-text .record-search {display:grid;grid-template-columns:1fr;gap:8px}
+.app.large-text .personal-best {flex-direction:column;gap:6px}
+.app.large-text .win-stats {grid-template-columns:1fr;gap:14px}
+.app.large-text .win-stats>div {display:flex;justify-content:space-between;align-items:baseline;gap:12px}
+.app.large-text .win-stats b {white-space:nowrap;margin:0}
+.app.large-text .win-bonus {display:block;line-height:1.6;text-align:left;overflow-wrap:anywhere}
+.app.large-text .win-bonus svg {vertical-align:middle;margin-right:6px}
+.app.large-text .rules>div {display:grid;grid-template-columns:28px minmax(0,1fr);gap:12px}
+.app.large-text .rules>div>span {white-space:nowrap}
+.app.large-text .rules p {min-width:0}
+.app.large-text .challenge-awards {grid-template-columns:1fr;max-height:none}
+.app.large-text .calendar-grid {grid-template-columns:repeat(7,minmax(0,1fr));gap:3px}
+.app.large-text .calendar-grid>* {min-width:0;min-height:36px;aspect-ratio:auto}
+.app.large-text .calendar-grid .weekday {white-space:nowrap}
+.app.large-text .calendar-heading {gap:8px}
+.app.large-text .calendar-heading button {flex-shrink:0}
+.app.large-text .monthly-badges>div {min-width:0;padding:12px 8px;text-align:center;line-height:1.5}
+.app.large-text .badge-carousel-item {padding:16px 8px;justify-content:flex-start;line-height:1.5}
+.app.large-text .badge-carousel-item>b {min-height:48px}
+.app.large-text.landscape-layout .modal .level-progress>.badge-emblem {width:42px;height:49px}
+.app.large-text.landscape-layout .stats-dialog .achievement-list {grid-template-columns:1fr}
+.app.large-text.landscape-layout .stats-dialog .achievement-copy {width:auto;min-width:0}
+.app.large-text.landscape-layout .stats-dialog .panel-tabs button {white-space:normal}
+.app.large-text.landscape-layout .modal-win .achievement-unlocks>div {grid-template-columns:1fr}
+.app.large-text.landscape-layout .clear-data-confirm .modal-symbol {float:none;margin:0 0 16px}
+
+@container (min-width:460px) {
+  .app.large-text .theme-grid,.app.large-text .difficulty-grid {grid-template-columns:repeat(2,minmax(0,1fr))}
+  .app.large-text .panel-tabs {grid-template-columns:repeat(3,minmax(0,1fr))}
+  .app.large-text .stats-records .panel-tabs {grid-template-columns:repeat(2,minmax(0,1fr))}
+  .app.large-text .record-row {grid-template-columns:minmax(0,1fr) max-content}
+  .app.large-text .record-row button {align-self:center}
+  .app.large-text .level-best-results {grid-template-columns:repeat(2,minmax(0,1fr))}
+}

@@ -8,19 +8,21 @@ import { SUITS, autoCollect, boardKey, canMove, capacity, cardName, describeMove
 import { useScreenOrientation } from './useScreenOrientation';
 import { usePixiMotion } from './usePixiMotion';
 import { usePressRepeat } from './usePressRepeat';
+import { useHintPress } from './useHintPress';
+import { useSolvabilityPreview } from './useSolvabilityPreview';
 import { PixiBoard } from './PixiBoard';
 import { useGamePersistence } from './useGamePersistence';
-import { LevelProgress, SettingsPanel, StatsPanel } from './GamePanels';
+import { SettingsPanel, StatsPanel } from './GamePanels';
 import { abandonRun, beginRun, progressRun, dailyMasterDeal, today, winRun } from './records';
 import { loadBackground } from './background';
 import { DIFFICULTIES, dealDifficulty, difficultyDeal, difficultyInfo, gameDifficultyLabel, type Difficulty } from './difficulty';
 import { feedback, unlockAudio, type Cue } from './feedback';
-import { AchievementUnlocks } from './AchievementPanels';
+import { WinRewards } from './WinRewards';
 import { settleAchievements, trackAchievementRun, trackAchievementAction } from './achievements';
 import { BadgeEmblem } from './BadgeEmblem';
 import { newEndgame, ENDGAME_XP, endgameMode, endgameGoal, endgameProgress } from './endgames';
 import { dailySpecial, newSpecialGame, specialRuleInfo, specialTitle, specialRecordKey, specialRewardKey, isDailyVariant, DAILY_VARIANTS, precisionMedal, SPECIAL_XP } from './specialRules';
-import { DAILY_MASTER_XP, firstWinAvailable, levelProgress, speedReward } from './progression';
+import { DAILY_MASTER_XP, difficultyReward, firstWinAvailable, levelProgress } from './progression';
 
 type Panel = 'menu' | 'new' | 'rules' | 'settings' | 'stats' | 'restart' | 'deal' | 'pause' | null;
 const time = (seconds: number) => `${Math.floor(seconds / 60).toString().padStart(2, '0')}:${(seconds % 60).toString().padStart(2, '0')}`;
@@ -51,7 +53,9 @@ export default function App() {
   const [visible, setVisible] = useState(!document.hidden);
   const [winDismissed, setWinDismissed] = useState(false);
   const motion = usePixiMotion(game.board);
-  const persistence = useGamePersistence(game, stats, settings, motion.busy || !!drag);
+  const verification = useSolvabilityPreview(game, motion);
+  const verifying = verification.state !== null;
+  const persistence = useGamePersistence(game, stats, settings, motion.busy || !!drag || verifying);
   const saveFailed = persistence.failed;
   const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const hintIndex = useRef(0);
@@ -65,10 +69,13 @@ export default function App() {
   const dailyRewardClaimed = !!stats.masters[dailyDate] || stats.xpAwards.includes(`master:${dailyDate}`);
   const endgameRewardClaimed = !!stats.endgames[dailyDate] || stats.xpAwards.includes(`endgame:${dailyDate}`);
   const specialRewardClaimed = !!stats.specials[dailyDate] || stats.xpAwards.includes(`special:${dailyDate}`);
+  const savedSpecialBest = game.special ? stats.specials[specialRecordKey(game.special)] : undefined;
+  const specialBest = savedSpecialBest?.version === game.special?.version ? savedSpecialBest : undefined;
   const nextDeal = game.masterDate || game.endgame || game.special ? settings.nextDeal : nextPlayableDeal(game.deal);
   const isWon = gameWon(game);
   const winOpen = isWon && !winDismissed && !motion.busy;
-  const paused = !!panel || winOpen || !visible || pickingDeal;
+  const playingPaused = !!panel || winOpen || !visible || pickingDeal;
+  const paused = playingPaused || verifying;
   const forwardMoves = useMemo(() => usefulMoves(game.board), [game.board]);
   const stuck = game.started && !isWon && !forwardMoves.length;
   const availableFinish = useMemo(() => {
@@ -167,7 +174,9 @@ export default function App() {
   }, []);
   useEffect(() => {
     if (paused || isWon || !game.started) return;
-    const timer = setInterval(() => setGame(g => ({ ...g, seconds: g.seconds + 1 })), 1000);
+    const timer = setInterval(() => {
+      setGame(g => verification.active.current ? g : { ...g, seconds: g.seconds + 1 });
+    }, 1000);
     return () => clearInterval(timer);
   }, [paused, isWon, game.started]);
   useEffect(() => {
@@ -176,7 +185,7 @@ export default function App() {
   }, [isWon, game.id, game.seconds, game.moves]);
   useEffect(() => {
     if (game.started && !isWon) setStats(s => progressRun(s, game));
-  }, [game.started, game.id, game.moves, isWon, paused]);
+  }, [game.started, game.id, game.moves, isWon, playingPaused]);
   useEffect(() => {
     if (winOpen && lastWinCue.current !== game.id) {
       lastWinCue.current = game.id; feedback('win', settings);
@@ -204,8 +213,8 @@ export default function App() {
     if (text) announce(text);
   }
   useEffect(() => {
-    autoResumePending.current = autoEnabled && !paused;
-  }, [autoEnabled, paused, game.id]);
+    autoResumePending.current = autoEnabled && !playingPaused;
+  }, [autoEnabled, playingPaused, game.id]);
   useEffect(() => {
     if (!autoResumePending.current || !autoEnabled || paused || motion.busy || motion.isBusy()) return;
     autoResumePending.current = false;
@@ -333,10 +342,10 @@ export default function App() {
       if (pickGeneration.current === token) setPickingDeal(false);
     }
   }
-  async function startEndgame(date = today(), version: NonNullable<Game['endgame']>['version'] = 2, restarting = false) {
+  async function startEndgame(date = today(), version: NonNullable<Game['endgame']>['version'] = 3, restarting = false) {
     if (pickingDeal || (!restarting && date !== today())) return;
     setDailyDate(today());
-    if (!restarting && game.endgame?.date === date && !isWon) { setPanel(null); return; }
+    if (!restarting && game.endgame?.date === date && game.endgame.version === version && !isWon) { setPanel(null); return; }
     const token = ++pickGeneration.current;
     setPickingDeal(true);
     try {
@@ -348,21 +357,21 @@ export default function App() {
       setStats(s => abandonRun(s, game));
       setGame(next); clearPick(); cancelDrag(); setPanel(null); setWinDismissed(false);
       feedback('deal', settings);
-      announce(restarting ? '已恢复这局残局的初始牌面' : '大师级残局已就绪，先规划唯一的空中转格');
+      announce(restarting ? '已恢复这局残局的初始牌面' : '高难残局已就绪，先规划唯一的空中转格与收牌顺序');
     } catch (error) {
       if (pickGeneration.current === token) announce(error instanceof Error ? error.message : '残局生成失败，请重试');
     } finally {
       if (pickGeneration.current === token) setPickingDeal(false);
     }
   }
-  async function startSpecial(date = today(), restarting = false, kind?: DailyVariant) {
+  async function startSpecial(date = today(), restarting = false, kind?: DailyVariant, version: NonNullable<Game['special']>['version'] = 2) {
     if (pickingDeal || (!restarting && date !== today())) return;
     setDailyDate(today());
-    if (!restarting && game.special?.date === date && (kind ? game.special.kind === kind : !isDailyVariant(game.special.kind)) && !isWon) { setPanel(null); return; }
+    if (!restarting && game.special?.date === date && game.special.version === version && (kind ? game.special.kind === kind : !isDailyVariant(game.special.kind)) && !isWon) { setPanel(null); return; }
     const token = ++pickGeneration.current;
     setPickingDeal(true);
     try {
-      const next = await newSpecialGame(date, kind);
+      const next = await newSpecialGame(date, kind, version);
       if (pickGeneration.current !== token) return;
       if (!restarting && date !== today()) { announce('日期已更新，请开始今天的挑战'); return; }
       if (!game.masterDate && !game.endgame && !game.special) setSettings(s => ({ ...s, nextDeal: nextPlayableDeal(game.deal) }));
@@ -378,7 +387,7 @@ export default function App() {
   }
   function restartGame() {
     // Saved puzzles keep their original date, board generation and goal version.
-    if (game.special) void startSpecial(game.special.date, true, isDailyVariant(game.special.kind) ? game.special.kind : undefined);
+    if (game.special) void startSpecial(game.special.date, true, isDailyVariant(game.special.kind) ? game.special.kind : undefined, game.special.version);
     else if (game.endgame) void startEndgame(game.endgame.date, game.endgame.version, true);
     else start(game.deal, game.masterDate);
   }
@@ -397,7 +406,7 @@ export default function App() {
     }
   }
   function showHint() {
-    if (motion.isBusy()) return;
+    if (paused || isWon || motion.isBusy() || verification.active.current) return;
     setGame(g => ({ ...g, achievementRun: trackAchievementAction(g, 'hint') }));
     const moves = rankedHints(game.board, { recent: game.history, held: game.held, auto: autoEnabled });
     const index = hintIndex.current++ % Math.max(1, moves.length);
@@ -406,6 +415,12 @@ export default function App() {
     if (move) { setSuggestion(move); feedback('select', settings); announce(`${hintReason(game.board, move)}：${describeMove(game.board, move)}${moves.length > 1 ? `（${index + 1}/${moves.length}）` : ''}`); }
     else announce('当前没有可用的前进移动，可以撤销或尝试从收牌区取回一张牌');
   }
+  async function verifySolvability() {
+    if (paused || isWon || drag || motion.isBusy() || verification.active.current) return;
+    const result = await verification.run();
+    if (result) announce(result);
+  }
+  const { holding: holdingHint, ...hintPress } = useHintPress(showHint, verifySolvability, !paused && !isWon && !motion.busy && !drag);
   function finishGame() {
     if (paused || isWon || motion.isBusy() || !availableFinish) return;
     setGame(g => ({ ...g, achievementRun: trackAchievementAction(g, 'collect') }));
@@ -438,6 +453,7 @@ export default function App() {
 
   useEffect(() => {
     const key = (event: KeyboardEvent) => {
+      if (verification.active.current) { event.preventDefault(); return; }
       if ((event.target as HTMLElement).matches('input, textarea')) return;
       if (event.key === 'Escape') { setPanel(null); setWinDismissed(true); setSelection(null); setSuggestion(null); cancelDrag(); return; }
       if (paused || motion.isBusy()) return;
@@ -451,7 +467,11 @@ export default function App() {
   const board = game.board;
   const progress = board.foundations.reduce((a, b) => a + b, 0);
 
-  return <main className={`app ${landscape ? 'landscape-layout' : ''} ${orientation.rotated ? 'landscape-rotated' : ''} ${landscape && isTauri() ? 'native-landscape-fullscreen' : ''} ${settings.large ? 'large-ranks' : ''} ${motion.busy ? 'cards-in-motion' : ''}`} style={landscape ? { '--landscape-width': `${orientation.width}px`, '--landscape-height': `${orientation.height}px` } as CSSProperties : undefined} onClick={clickBackground} onContextMenu={event => event.preventDefault()}>
+  return <main className={`app ${landscape ? 'landscape-layout' : ''} ${orientation.rotated ? 'landscape-rotated' : ''} ${landscape && isTauri() ? 'native-landscape-fullscreen' : ''} ${settings.large || settings.largeText ? 'large-ranks' : ''} ${settings.largeText ? 'large-text' : ''} ${motion.busy ? 'cards-in-motion' : ''}`} style={landscape ? { '--landscape-width': `${orientation.width}px`, '--landscape-height': `${orientation.height}px` } as CSSProperties : undefined} onClick={clickBackground} onContextMenu={event => event.preventDefault()}
+    onClickCapture={event => { if (verification.active.current) { event.preventDefault(); event.stopPropagation(); } }}
+    onPointerDownCapture={event => { if (verification.active.current) { event.preventDefault(); event.stopPropagation(); } }}
+    onKeyDownCapture={event => { if (verification.active.current) { event.preventDefault(); event.stopPropagation(); } }}>
+    <div className="verification-content" inert={verifying} aria-busy={verifying}>
     <header className="header">
       <button className="player-profile" onClick={() => setPanel('stats')} aria-label={`${playerLevel.title}，等级 ${playerLevel.level}，查看等级徽章、成就和经验`}><BadgeEmblem tier={playerLevel.tier} /><span className="player-details"><span className="player-title"><b>Lv.{playerLevel.level}</b><span>{playerLevel.title}</span></span><span className="player-xp-track" role="progressbar" aria-label="等级经验" aria-valuemin={0} aria-valuemax={playerLevel.required} aria-valuenow={playerLevel.current}><span style={{ width: `${playerLevel.fraction * 100}%` }} /></span><small>{playerLevel.current} / {playerLevel.required} XP</small></span></button>
       <div className="mobile-meta"><button className="mobile-deal" aria-label={game.special ? `${specialTitle(game.special)}，${specialRuleInfo(game.special).title}，查看规则` : game.endgame ? `每日残局挑战，${endgameMode(game.endgame.kind).title}，查看目标` : `第 ${game.deal} 局，${currentDifficultyLabel}难度，查看详情`} onClick={() => setPanel('menu')}><span>{game.special ? specialTitle(game.special) : game.endgame ? '每日残局挑战' : `#${game.deal}`}</span><small>{game.special ? specialRuleInfo(game.special).title : game.endgame ? endgameMode(game.endgame.kind).title : knownUnsolvable ? '已知无解' : currentDifficultyLabel}</small></button>{landscape && <span className="landscape-moves">{game.moves} 步</span>}<button onClick={() => setPanel('pause')} aria-label={`已用时 ${time(game.seconds)}，暂停`}>{time(game.seconds)}</button></div><div className="header-actions"><button className="icon-button daily-button" aria-label="每日大师挑战" onClick={startDailyMaster}><GameplayBadge kind="daily-master" />{dailyRewardClaimed && <span className="daily-completed" />}</button><button className="icon-button menu-button" aria-label="更多" title="更多" onClick={() => setPanel('menu')}><MoreHorizontal size={22} /></button></div>
@@ -462,14 +482,14 @@ export default function App() {
       <div className="counters"><button className="timer-button" onClick={() => setPanel('pause')} aria-label={`已用时 ${time(game.seconds)}，点击暂停`}>{time(game.seconds)}</button><span className="counter-divider" /><span><b key={`${game.id}-${game.moves}`} className="move-counter">{game.moves}</b> <small>步</small></span></div>
     </section>
 
-    <PixiBoard motion={motion} board={game.board} gameId={game.id} targetColumn={game.endgame?.kind === 'clear' ? game.endgame.targetColumn : undefined} selection={selection} suggestion={suggestion}
-      disabled={paused || isWon} paused={paused} compact={compact} landscape={landscape} rotated={orientation.rotated} cellsRight={settings.cellsRight !== false} large={settings.large}
-      onCard={tapCard} onTarget={chooseTarget} onBlank={cancelSelection} onHintEnd={move => setSuggestion(current => current === move ? null : current)} onDrop={dropCard}
+    <PixiBoard motion={motion} board={game.board} gameId={game.id} targetColumn={game.endgame?.kind === 'clear' ? game.endgame.targetColumn : undefined} selection={verifying ? null : selection} suggestion={verifying ? null : suggestion}
+      disabled={paused || isWon} paused={paused} compact={compact} landscape={landscape} rotated={orientation.rotated} cellsRight={settings.cellsRight !== false} large={settings.large} largeText={settings.largeText}
+      onCard={tapCard} onTarget={chooseTarget} onBlank={cancelSelection} onHintEnd={move => { if (!verification.active.current) setSuggestion(current => current === move ? null : current); }} onDrop={dropCard}
       onDrag={(active, source) => { setDrag(active); if (active && source) { feedback('select', settings); setSelection(source); setSuggestion(null); } }} />
 
     <footer className="footer">
-      {game.special && <div className="endgame-objective" role="status"><b>{specialTitle(game.special)} · {specialRuleInfo(game.special).title}</b><span>{specialRuleInfo(game.special).description}</span><span>{game.special.kind === 'suit-first' ? `优先花色已收 ${game.board.foundations[game.special.prioritySuit]}/13 · ` : ''}{game.special.kind === 'precision' ? `已用 ${game.moves} 步 · 当前${precisionMedal(game.special, game.moves)}区间${stats.specials[specialRecordKey(game.special)] ? ` · 最佳 ${stats.specials[specialRecordKey(game.special)].bestMoves} 步` : ''}` : '52 张全部归位'} · {stats.xpAwards.includes(specialRewardKey(game.special)) || stats.specials[specialRecordKey(game.special)] ? '本日奖励已领取' : game.special.date === dailyDate ? `${game.special.kind === 'precision' ? '按通关奖牌结算奖励' : `完成 +${SPECIAL_XP} XP`}${firstWinReady ? ' · 首胜翻倍' : ''}` : '往日挑战，仅记录成绩'}</span></div>}
-      {game.endgame && <div className="endgame-objective" role="status"><b>{game.endgame.version === 2 ? '大师级 · ' : ''}{endgameMode(game.endgame.kind).title} · {endgameGoal(game.endgame)}</b><span>从 {game.endgame.baseRank + 1} 开始收牌 · {endgameProgress(game)}</span><span>{stats.xpAwards.includes(`endgame:${game.endgame.date}`) || stats.endgames[game.endgame.date] ? '本日奖励已领取，重玩可挑战成就' : game.endgame.date === dailyDate ? `完成 +${ENDGAME_XP} XP${firstWinReady ? ' · 今日首胜翻倍' : ''}` : '往日残局，仅记录成绩'}</span></div>}
+      {game.special && <div className="endgame-objective" role="status"><b>{specialTitle(game.special)} · {specialRuleInfo(game.special).title}</b><span>{specialRuleInfo(game.special).description}</span><span>{game.special.kind === 'suit-first' ? `优先花色已收 ${game.board.foundations[game.special.prioritySuit]}/13 · ` : ''}{game.special.kind === 'precision' ? `已用 ${game.moves} 步 · 当前${precisionMedal(game.special, game.moves)}区间${specialBest ? ` · 最佳 ${specialBest.bestMoves} 步` : ''}` : '52 张全部归位'} · {stats.xpAwards.includes(specialRewardKey(game.special)) || stats.specials[specialRecordKey(game.special)] ? '本日奖励已领取' : game.special.date === dailyDate ? `完成 +${SPECIAL_XP} XP${firstWinReady ? ' · 首胜翻倍' : ''}` : '往日挑战，仅记录成绩'}</span></div>}
+      {game.endgame && <div className="endgame-objective" role="status"><b>{game.endgame.version >= 2 ? '高难 · ' : ''}{endgameMode(game.endgame.kind).title} · {endgameGoal(game.endgame)}</b><span>从 {game.endgame.baseRank + 1} 开始收牌 · {endgameProgress(game)}</span><span>{stats.xpAwards.includes(`endgame:${game.endgame.date}`) || stats.endgames[game.endgame.date] ? '本日奖励已领取，重玩可挑战成就' : game.endgame.date === dailyDate ? `完成 +${ENDGAME_XP} XP${firstWinReady ? ' · 今日首胜翻倍' : ''}` : '往日残局，仅记录成绩'}</span></div>}
       {game.masterDate && <div className="endgame-objective" role="status"><b>每日大师挑战 · 将 52 张牌全部归位</b><span>标准空当接龙规则 · 关键牌深埋，先规划中转空间</span><span>{stats.xpAwards.includes(`master:${game.masterDate}`) || stats.masters[game.masterDate] ? '本日奖励已领取，重玩可挑战成就' : game.masterDate === dailyDate ? `完成 +${DAILY_MASTER_XP} XP${firstWinReady ? ' · 今日首胜翻倍' : ''}` : '往日牌局，按普通对局结算'}</span></div>}
       {knownUnsolvable && <div className="board-notice" role="status"><div><b>第 {game.deal} 局已知无解</b><p>标准规则下无法通关，可以查看原始牌面，或开始下一局。</p></div></div>}
       {!knownUnsolvable && game.started && !isWon && !forwardMoves.length && dismissedStuck !== stuckKey && <div className="board-notice" role="status"><div><b>当前没有新的前进移动</b><p>{usefulMoves(board, true).length ? '可以取回收牌区顶牌重新整理，也可以撤销。' : '可以撤销之前的移动，或重玩这局。'}这不代表已经证明本局无解。</p></div><button aria-label="关闭提示" onClick={() => setDismissedStuck(stuckKey)}><X size={16} /></button></div>}
@@ -478,7 +498,7 @@ export default function App() {
       <div className="toolbar">
         <button className="new-button" onClick={() => { setInputError(''); setPanel('new'); }}><Plus size={19} /><span>新牌局</span></button>
         <span className="toolbar-divider" />
-        <button className="tool-button" onClick={showHint} disabled={paused || isWon || motion.busy}><Lightbulb /><span>提示</span></button>
+        <button className={`tool-button hint-button ${holdingHint ? 'hint-holding' : ''}`} {...hintPress} title="点击提示，长按 3 秒验证当前局面是否有解" aria-label="提示，长按 3 秒验证是否有解" disabled={paused || isWon || motion.busy}><Lightbulb /><span>{holdingHint ? '验证有解' : '提示'}</span></button>
         <button className="tool-button secondary-tool" onClick={redo} disabled={!game.redo.length || paused || isWon || motion.busy}><ArrowRight /><span>重做</span></button>
         <button className="tool-button undo-button" {...undoPress} title="点击撤销，按住连续撤销" disabled={!game.history.length || paused || isWon || (motion.busy && !holdingUndo)}><Undo2 /><span>撤销</span></button>
         {landscape && <><button className="tool-button" onClick={startDailyMaster}><GameplayBadge kind="daily-master" /><span>大师</span></button><button className="tool-button" onClick={() => setPanel('menu')}><MoreHorizontal /><span>更多</span></button></>}
@@ -497,9 +517,9 @@ export default function App() {
     }}>
       <button className="modal-close" autoFocus aria-label="关闭" onClick={() => { if (winOpen) setWinDismissed(true); else setPanel(null); }}><X size={20} /></button>
       <div className="modal-body">
-      {winOpen ? <div className="dialog-layout"><div className="dialog-summary"><div className="modal-symbol victory"><Trophy size={36} /></div><p className="eyebrow">A LITTLE PATIENCE. A GREAT WIN.</p><h2 id="dialog-title">{game.endgame || game.special ? '漂亮，挑战完成。' : '漂亮，全部归位。'}</h2><p className="modal-description">{game.special ? `${game.special.date} · ${specialRuleInfo(game.special).title}` : game.endgame ? `${game.endgame.date} · ${endgameMode(game.endgame.kind).title}` : `${currentDifficultyLabel} · 第 ${game.deal} 局已完成`}{stats.lastReward?.gameId === game.id && ` · +${stats.lastReward.xp} XP`}</p>{stats.lastReward?.gameId === game.id && !!stats.lastReward.firstWinBonus && <p className="win-bonus"><Sparkles size={16} />今日首胜奖励 +{stats.lastReward.firstWinBonus} XP！</p>}{stats.lastReward?.gameId === game.id && !!stats.lastReward.speedBonus && <p className="win-bonus speed-win-bonus"><Sparkles size={16} />{speedReward(game.seconds)?.label}通关 · 速度奖励 +{stats.lastReward.speedBonus} XP！</p>}</div><div className="dialog-content">{game.special?.kind === 'precision' && <div className={`precision-result precision-${precisionMedal(game.special, game.moves) === '金牌' ? 'gold' : precisionMedal(game.special, game.moves) === '银牌' ? 'silver' : 'bronze'}`} role="status"><GameplayBadge kind="daily-precision" /><b>{precisionMedal(game.special, game.moves)}达成</b><span>金牌 ≤{game.special.goldMoves} 步 · 银牌 ≤{game.special.silverMoves} 步</span><span>个人最佳 {Math.min(game.moves, stats.specials[specialRecordKey(game.special)]?.bestMoves ?? game.moves)} 步</span></div>}<AchievementUnlocks stats={stats} gameId={game.id} /><LevelProgress stats={stats} /><div className="win-stats"><div><b>{time(game.seconds)}</b><span>用时</span></div><div><b>{game.moves}</b><span>步数</span></div><div><b>{game.special?.kind === 'precision' ? 28 : game.endgame ? progress - game.endgame.baseRank * 4 : 52}</b><span>收牌</span></div></div>{game.endgame || game.special ? <button className="primary" onClick={() => { setWinDismissed(true); setPanel('new'); }}><Plus size={18} />选择新牌局</button> : <button className="primary" disabled={pickingDeal} onClick={() => void startNextGame()}><Plus size={18} />{settings.sequential ? `下一局 · #${nextDeal}` : '再来一局'}</button>}{game.special?.kind === 'precision' && <button className="secondary" disabled={pickingDeal} onClick={restartGame}>重玩，挑战更少步数</button>}<button className="secondary" onClick={() => { setWinDismissed(true); setPanel('stats'); }}>查看游戏记录</button></div></div> : <>
+      {winOpen ? <div className="dialog-layout"><div className="dialog-summary"><div className="modal-symbol victory"><Trophy size={36} /></div><p className="eyebrow">A LITTLE PATIENCE. A GREAT WIN.</p><h2 id="dialog-title">{game.endgame || game.special ? '漂亮，挑战完成。' : '漂亮，全部归位。'}</h2><p className="modal-description">{game.special ? `${game.special.date} · ${specialRuleInfo(game.special).title}` : game.endgame ? `${game.endgame.date} · ${endgameMode(game.endgame.kind).title}` : `${currentDifficultyLabel} · 第 ${game.deal} 局已完成`}</p></div><div className="dialog-content"><WinRewards stats={stats} gameId={game.id} />{game.special?.kind === 'precision' && <div className={`precision-result precision-${precisionMedal(game.special, game.moves) === '金牌' ? 'gold' : precisionMedal(game.special, game.moves) === '银牌' ? 'silver' : 'bronze'}`} role="status"><GameplayBadge kind="daily-precision" /><b>{precisionMedal(game.special, game.moves)}达成</b><span>金牌 ≤{game.special.goldMoves} 步 · 银牌 ≤{game.special.silverMoves} 步</span><span>个人最佳 {Math.min(game.moves, specialBest?.bestMoves ?? game.moves)} 步</span></div>}<div className="win-stats"><div><b>{time(game.seconds)}</b><span>用时</span></div><div><b>{game.moves}</b><span>步数</span></div><div><b>{game.special?.kind === 'precision' ? game.special.version === 1 ? 28 : 44 : game.endgame ? progress - game.endgame.baseRank * 4 : 52}</b><span>收牌</span></div></div>{game.endgame || game.special ? <button className="primary" onClick={() => { setWinDismissed(true); setPanel('new'); }}><Plus size={18} />选择新牌局</button> : <button className="primary" disabled={pickingDeal} onClick={() => void startNextGame()}><Plus size={18} />{settings.sequential ? `下一局 · #${nextDeal}` : '再来一局'}</button>}{game.special?.kind === 'precision' && <button className="secondary" disabled={pickingDeal} onClick={restartGame}>重玩，挑战更少步数</button>}<button className="secondary" onClick={() => { setWinDismissed(true); setPanel('stats'); }}>查看游戏记录</button></div></div> : <>
         {panel !== 'menu' && panel !== 'pause' && <button className="back-button" aria-label="返回更多" title="返回更多" onClick={() => setPanel('menu')}><ArrowLeft size={15} />更多</button>}
-        {panel === 'menu' && <div className="dialog-layout"><div className="dialog-summary"><p className="eyebrow">TAKE YOUR TIME</p><h2 id="dialog-title">继续你的好牌局</h2><LevelProgress stats={stats} detailed /><p className="modal-description">{game.special ? `${specialTitle(game.special)} · ${specialRuleInfo(game.special).title}` : game.endgame ? `每日残局挑战 · ${endgameMode(game.endgame.kind).title}` : `第 ${game.deal} 局 · ${currentDifficultyLabel}`} · {time(game.seconds)} · {game.moves} 步 · 已收 {progress}/52 张{game.masterDate && ` · 挑战 ${game.masterDate}`}</p>{compact && (messageActive || saveFailed) && <p className="notice">{saveFailed ? '本地保存失败，请留在当前页面继续游戏' : message}</p>}{knownUnsolvable && <p className="notice">第 {game.deal} 局在标准规则下已知无解，可以查看牌面或开始新牌局。</p>}{!knownUnsolvable && game.started && !isWon && !forwardMoves.length && <p className="notice">当前没有新的前进移动。可以尝试取回收牌区顶牌或撤销；这不代表已证明本局无解。</p>}</div><div className="dialog-content"><div className="menu-list">{!compact && <button onClick={() => { setInputError(''); setPanel('new'); }}><Plus />新牌局<ChevronRight /></button>}<button onClick={() => { setDealInput(''); setInputError(''); setPanel('deal'); }}><ShieldCheck />指定编号<ChevronRight /></button><button onClick={() => setPanel('restart')}><RotateCcw />重玩本局<ChevronRight /></button><button onClick={startDailyMaster}><GameplayBadge kind="daily-master" />每日大师挑战<ChevronRight /></button><button onClick={() => startEndgame()}><GameplayBadge kind="daily-endgame" />每日残局挑战<ChevronRight /></button><button onClick={() => startSpecial()}><GameplayBadge kind="daily-special" />每日特殊规则<ChevronRight /></button>{DAILY_VARIANTS.map(kind => <button key={kind} disabled={pickingDeal} onClick={() => startSpecial(today(), false, kind)}><GameplayBadge kind={`daily-${kind}`} />{specialTitle({ kind, prioritySuit: 0 })}<ChevronRight /></button>)}<button onClick={() => setPanel('stats')}><Trophy />成就与记录<ChevronRight /></button><button onClick={() => setPanel('settings')}><Settings2 />偏好设置<ChevronRight /></button><button onClick={() => setPanel('rules')}><CircleHelp />玩法说明<ChevronRight /></button></div></div></div>}
+        {panel === 'menu' && <div className="dialog-layout"><div className="dialog-summary"><p className="eyebrow">TAKE YOUR TIME</p><h2 id="dialog-title">继续你的好牌局</h2><p className="modal-description">{game.special ? `${specialTitle(game.special)} · ${specialRuleInfo(game.special).title}` : game.endgame ? `每日残局挑战 · ${endgameMode(game.endgame.kind).title}` : `第 ${game.deal} 局 · ${currentDifficultyLabel}`} · {time(game.seconds)} · {game.moves} 步 · 已收 {progress}/52 张{game.masterDate && ` · 挑战 ${game.masterDate}`}</p>{compact && (messageActive || saveFailed) && <p className="notice">{saveFailed ? '本地保存失败，请留在当前页面继续游戏' : message}</p>}{knownUnsolvable && <p className="notice">第 {game.deal} 局在标准规则下已知无解，可以查看牌面或开始新牌局。</p>}{!knownUnsolvable && game.started && !isWon && !forwardMoves.length && <p className="notice">当前没有新的前进移动。可以尝试取回收牌区顶牌或撤销；这不代表已证明本局无解。</p>}</div><div className="dialog-content"><div className="menu-list">{!compact && <button onClick={() => { setInputError(''); setPanel('new'); }}><Plus /><span className="menu-label">新牌局</span><ChevronRight /></button>}<button onClick={() => { setDealInput(''); setInputError(''); setPanel('deal'); }}><ShieldCheck /><span className="menu-label">指定编号</span><ChevronRight /></button><button onClick={() => setPanel('restart')}><RotateCcw /><span className="menu-label">重玩本局</span><ChevronRight /></button><button onClick={() => setPanel('stats')}><Trophy /><span className="menu-label">成就与记录</span><ChevronRight /></button><button onClick={() => setPanel('settings')}><Settings2 /><span className="menu-label">偏好设置</span><ChevronRight /></button><button onClick={() => setPanel('rules')}><CircleHelp /><span className="menu-label">玩法说明</span><ChevronRight /></button></div></div></div>}
         {panel === 'new' && <div className="dialog-layout new-game-dialog">
           <div className="dialog-summary">
             <h2 id="dialog-title">新牌局</h2>
@@ -508,7 +528,11 @@ export default function App() {
             </div>
           </div>
           <div className="dialog-content">
-            {!settings.sequential && <div className="difficulty-grid" role="group" aria-label="牌局难度">{DIFFICULTIES.map(item => <button key={item.id} title={item.description} disabled={pickingDeal} aria-pressed={difficulty === item.id} onClick={() => setDifficulty(item.id)}><GameplayBadge kind={item.id} /><span className="difficulty-copy"><b>{item.label}</b><small className={firstWinReady ? 'double-xp' : ''}>+{item.xp * (firstWinReady ? 2 : 1)} XP</small></span></button>)}</div>}
+            {!settings.sequential && <div className="difficulty-grid" role="group" aria-label="牌局难度">{DIFFICULTIES.map(item => {
+              const reward = difficultyReward(stats, item.id, dailyDate);
+              return <button key={item.id} title={`${item.description} · 今日已完成 ${reward.wins} 局，下一局基础奖励 ${reward.xp} XP`} disabled={pickingDeal} aria-pressed={difficulty === item.id} onClick={() => setDifficulty(item.id)}><GameplayBadge kind={item.id} /><span className="difficulty-copy"><b>{item.label}</b><small className={firstWinReady ? 'double-xp' : ''}>+{reward.xp * (firstWinReady ? 2 : 1)} XP</small></span></button>;
+            })}</div>}
+            <p className="fine-print">四档难度分别累计，每通关一局，该难度下一局增加一份基础经验；每天重置。首胜与速度奖励额外叠加。</p>
             <button className="primary" disabled={pickingDeal} onClick={() => void startNextGame()}><Plus size={18} />{pickingDeal ? '正在选取牌局…' : settings.sequential ? `开始下一局 · #${nextDeal}` : `开始${difficultyInfo(difficulty).label}牌局`}</button>
 
             {game.started && !isWon && <p className="new-game-warning">{game.endgame || game.special ? '新牌局会替换当前挑战进度。' : '新牌局会替换当前进度，并中断连胜。'}</p>}
@@ -522,7 +546,7 @@ export default function App() {
               </button>
               <button className={`daily-game-entry ${endgameRewardClaimed ? 'reward-claimed' : ''}`} disabled={pickingDeal} onClick={() => startEndgame()}>
                 <GameplayBadge kind="daily-endgame" />
-                <span className="daily-game-copy"><b>每日残局挑战</b><small>{pickingDeal ? '正在准备挑战牌面…' : endgameRewardClaimed ? '今日残局奖励已领取' : '大师级布局 · 仅一个空中转格'}</small></span>
+                <span className="daily-game-copy"><b>每日残局挑战</b><small>{pickingDeal ? '正在准备挑战牌面…' : endgameRewardClaimed ? '今日残局奖励已领取' : '深度交叉阻挡 · 仅一个空中转格'}</small></span>
                 <span className="daily-game-reward">{endgameRewardClaimed ? <strong>已领取</strong> : <><strong>+{ENDGAME_XP * (firstWinReady ? 2 : 1)} XP</strong><small>{firstWinReady ? '含今日首胜' : '每日奖励'}</small></>}</span>
                 <ChevronRight size={16} />
               </button>
@@ -533,14 +557,15 @@ export default function App() {
                 <ChevronRight size={16} />
               </button>
               {DAILY_VARIANTS.map(kind => {
-                const challenge = { kind, prioritySuit: 0, version: 1 as const, date: dailyDate };
-                const best = stats.specials[specialRecordKey(challenge)];
-                const claimed = !!best || stats.xpAwards.includes(specialRewardKey(challenge));
-                const description = kind === 'precision' ? '目标步数 · 金银铜牌' : kind === 'same-suit' ? '同花递减叠牌 · A 到 K 收牌' : '红黑递增叠牌 · K 到 A 收牌';
+                const challenge = { kind, prioritySuit: 0, version: 2 as const, date: dailyDate };
+                const saved = stats.specials[specialRecordKey(challenge)];
+                const best = saved?.version === challenge.version ? saved : undefined;
+                const claimed = !!saved || stats.xpAwards.includes(specialRewardKey(challenge));
+                const description = kind === 'precision' ? '44 张牌 · 挑战目标步数' : kind === 'same-suit' ? '同花递减 · 深埋关键牌' : '逆序递增 · 交叉阻挡';
                 return <button key={kind} className={`daily-game-entry ${claimed ? 'reward-claimed' : ''}`} disabled={pickingDeal} onClick={() => startSpecial(today(), false, kind)}>
                   <GameplayBadge kind={`daily-${kind}`} />
                   <span className="daily-game-copy"><b>{specialTitle(challenge)}</b><small>{pickingDeal ? '正在准备挑战牌面…' : best ? `${kind === 'precision' ? `${precisionMedal(best, best.bestMoves)} · ` : ''}最佳 ${best.bestMoves} 步` : description}</small></span>
-                  <span className="daily-game-reward">{claimed ? <strong>已领取</strong> : <><strong>+{kind === 'precision' ? SPECIAL_XP : SPECIAL_XP * (firstWinReady ? 2 : 1)} XP</strong><small>{kind !== 'precision' && firstWinReady ? '含今日首胜' : '每日奖励'}</small></>}</span>
+                  <span className="daily-game-reward">{claimed ? <strong>已领取</strong> : <><strong>+{SPECIAL_XP * (firstWinReady ? 2 : 1)} XP</strong><small>{firstWinReady ? '含今日首胜' : '每日奖励'}</small></>}</span>
                   <ChevronRight size={16} />
                 </button>;
               })}
@@ -561,12 +586,19 @@ export default function App() {
         </div>}
         {panel === 'restart' && <div className="dialog-layout"><div className="dialog-summary"><div className="modal-symbol"><RotateCcw /></div><h2 id="dialog-title">{game.special ? `重玩${specialTitle(game.special)}？` : game.endgame ? '重玩这局残局？' : `重玩第 ${game.deal} 局？`}</h2><p className="modal-description">恢复这局最初的牌面，步数和计时归零。{game.endgame || game.special ? '重复完成不重复领奖。' : '未完成的牌局会中断连胜。'}</p></div><div className="dialog-content"><button className="primary" onClick={restartGame}>重玩本局</button><button className="secondary" onClick={() => setPanel(null)}>继续当前牌局</button></div></div>}
         {panel === 'pause' && <div className="dialog-layout"><div className="dialog-summary"><div className="modal-symbol"><Flag /></div><p className="eyebrow">NO NEED TO RUSH</p><h2 id="dialog-title">休息一下</h2><p className="modal-description">计时已暂停，你的牌局就在这里。</p></div><div className="dialog-content"><div className="pause-time">{time(game.seconds)}</div><button className="primary" onClick={() => setPanel(null)}><Play size={18} />继续游戏</button></div></div>}
-        {panel === 'rules' && <div className="dialog-layout"><div className="dialog-summary"><p className="eyebrow">THE ART OF MAKING ROOM</p><h2 id="dialog-title">一点空间，很多可能</h2></div><div className="dialog-content"><div className="rules">{game.special && <div><span>★</span><p><b>{specialTitle(game.special)}</b>{specialRuleInfo(game.special).description}</p></div>}<div><span>01</span><p><b>{game.special?.kind === 'same-suit' ? '同花色，依次递减' : game.special?.kind === 'reverse' ? '红黑交替，依次递增' : '红黑交替，依次递减'}</b>{game.special?.kind === 'same-suit' ? '例如把 ♠6 放到 ♠7 上，不同花色不能叠放。' : game.special?.kind === 'reverse' ? '例如把红色 7 放到黑色 6 上。' : '八列牌中，把红色 6 放到黑色 7 上。'}连续有序的牌可以一起搬动。</p></div><div><span>02</span><p><b>中转格，每格一张</b>四个格子用于临时放牌。空列可以放任意牌，不必从 K 开始。</p></div><div><span>03</span><p><b>腾出空间，搬更多牌</b>最多可搬张数 =（空中转格 + 1）× 2 的空列数次方。目的地为空列时不计入空列数。</p></div><div><span>04</span><p><b>{game.special?.kind === 'reverse' ? '从 K 到 A，全部归位' : '从 A 到 K，全部归位'}</b>同花色按{game.special?.kind === 'reverse' ? '递减' : '递增'}顺序移到对应收牌区。52 张全部收起即获胜；需要时也可以取回收牌区顶牌。</p></div></div><div className="notice">点牌再点目的地，或直接拖动。移动端单击露出的单张牌即可收牌；桌面端先选牌，再次点击尝试移动。不能收牌时可点选目的地或拖动；再次点击已选牌可尝试移入空中转格，牌组有唯一落点时自动移动。设置中可开启单击便捷移动；多个落点时仍由你选择。取回的牌暂不自动收起，可手动移回收牌区。连续点提示可查看其他建议，提示不保证通关。</div><button className="primary" onClick={() => setPanel(null)}>开始享受牌局</button></div></div>}
+        {panel === 'rules' && <div className="dialog-layout"><div className="dialog-summary"><p className="eyebrow">THE ART OF MAKING ROOM</p><h2 id="dialog-title">一点空间，很多可能</h2></div><div className="dialog-content"><div className="rules">{game.endgame && <div><span>★</span><p><b>{endgameMode(game.endgame.kind).title}</b>{endgameGoal(game.endgame)}。从 {game.endgame.baseRank + 1} 开始收牌。当前进度：{endgameProgress(game)}。</p></div>}{game.masterDate && <div><span>★</span><p><b>每日大师挑战</b>标准空当接龙规则，将 52 张牌全部归位。关键牌深埋，先规划中转空间。</p></div>}{game.special && <div><span>★</span><p><b>{specialTitle(game.special)}</b>{specialRuleInfo(game.special).description}</p></div>}<div><span>01</span><p><b>{game.special?.kind === 'same-suit' ? '同花色，依次递减' : game.special?.kind === 'reverse' ? '红黑交替，依次递增' : '红黑交替，依次递减'}</b>{game.special?.kind === 'same-suit' ? '例如把 ♠6 放到 ♠7 上，不同花色不能叠放。' : game.special?.kind === 'reverse' ? '例如把红色 7 放到黑色 6 上。' : '八列牌中，把红色 6 放到黑色 7 上。'}连续有序的牌可以一起搬动。</p></div><div><span>02</span><p><b>中转格，每格一张</b>四个格子用于临时放牌。空列可以放任意牌，不必从 K 开始。</p></div><div><span>03</span><p><b>腾出空间，搬更多牌</b>最多可搬张数 =（空中转格 + 1）× 2 的空列数次方。目的地为空列时不计入空列数。</p></div><div><span>04</span><p><b>{game.special?.kind === 'reverse' ? '从 K 到 A，全部归位' : '从 A 到 K，全部归位'}</b>同花色按{game.special?.kind === 'reverse' ? '递减' : '递增'}顺序移到对应收牌区。52 张全部收起即获胜；需要时也可以取回收牌区顶牌。</p></div></div><div className="notice">点牌再点目的地，或直接拖动。移动端单击露出的单张牌即可收牌；桌面端先选牌，再次点击尝试移动。不能收牌时可点选目的地或拖动；再次点击已选牌可尝试移入空中转格，牌组有唯一落点时自动移动。设置中可开启单击便捷移动；多个落点时仍由你选择。取回的牌暂不自动收起，可手动移回收牌区。连续点提示可查看其他建议，提示不保证通关。长按提示 3 秒可验证当前局面是否有解，快速演示后自动恢复牌面；验证期间无法操作，计时暂停。</div><button className="primary" onClick={() => setPanel(null)}>开始享受牌局</button></div></div>}
         {panel === 'settings' && <SettingsPanel settings={settings} update={next => { setSettings(next); if (next.auto && game.started) setGame(g => ({ ...g, achievementRun: trackAchievementAction(g, 'auto') })); }} photo={photo} setPhoto={setPhoto} clearData={clearData} close={() => setPanel(null)} />}
-        {panel === 'stats' && <StatsPanel stats={stats} game={game} start={start} startSpecial={startSpecial} startEndgame={startEndgame} close={() => setPanel(null)} />}
+        {panel === 'stats' && <StatsPanel stats={stats} largeText={settings.largeText} game={game} start={start} startSpecial={startSpecial} startEndgame={startEndgame} close={() => setPanel(null)} />}
 
       </>}
       </div>
     </section></div>}
+    </div>
+    {verification.state && <div className={`verification-overlay verification-${verification.state.phase}`}>
+      <div className={`verification-status ${verification.state.outcome ? `verification-${verification.state.outcome}` : ''}`} role="status" aria-live="polite" aria-atomic="true">
+        <span className="verification-icon" aria-hidden="true">{verification.state.phase === 'result' ? verification.state.outcome === 'solved' ? <ShieldCheck size={22} /> : <CircleHelp size={22} /> : <Sparkles size={22} />}</span>
+        <b>{verification.state.title}</b><span>{verification.state.detail}</span>
+      </div>
+    </div>}
   </main>;
 }

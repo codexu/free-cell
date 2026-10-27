@@ -1,0 +1,18 @@
+.verification-content{display:contents}
+.hint-button{position:relative;isolation:isolate;overflow:hidden;touch-action:none;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
+.hint-button::after{content:"";position:absolute;inset:auto 0 0;height:3px;border-radius:3px;background:var(--gold);transform:scaleX(0);transform-origin:left;pointer-events:none}
+.hint-holding::after{animation:hint-hold-progress 3s linear forwards}
+.hint-holding{color:#f3dda8;background:#d4bb7917;border-radius:8px}
+.verification-overlay{position:absolute;inset:0;z-index:200;display:flex;align-items:flex-end;justify-content:center;padding:0 16px calc(122px + env(safe-area-inset-bottom));touch-action:none;cursor:wait}
+.verification-status{display:flex;flex-direction:column;align-items:center;gap:7px;max-width:min(100%,380px);padding:17px 24px;border:1px solid #d4bb7970;border-radius:15px;background:#10392af2;box-shadow:0 10px 35px #06251955;color:#f4e4b9;text-align:center;animation:verification-enter 180ms cubic-bezier(.2,0,0,1) both;pointer-events:none}
+.verification-status>b{font-size:var(--text-14,14px);font-weight:600}
+.verification-status>span:last-child{font-size:var(--text-11,11px);line-height:1.6;color:#bdcdb6}
+.verification-icon{display:grid;place-items:center;width:34px;height:34px;border-radius:50%;background:#d4bb791a;color:#e0c985}
+.verification-searching .verification-icon{animation:verification-breathe 1.2s ease-in-out infinite}
+.verification-unsolvable,.verification-error,.verification-limit{border-color:#cfad7480}
+@keyframes hint-hold-progress{to{transform:scaleX(1)}}
+@keyframes verification-enter{from{opacity:0;transform:translateY(7px) scale(.98)}to{opacity:1;transform:translateY(0) scale(1)}}
+@keyframes verification-breathe{50%{opacity:.65;transform:scale(.94)}}
+@media(max-width:700px),(pointer:coarse) and (max-width:1100px){.verification-overlay{padding-bottom:calc(136px + env(safe-area-inset-bottom))}.verification-status{padding:14px 20px;gap:6px}}
+.app.landscape-layout .verification-overlay{padding-bottom:calc(85px + env(safe-area-inset-bottom))}
+@media(prefers-reduced-motion:reduce){.verification-status,.verification-searching .verification-icon{animation:none}.hint-holding::after{animation:hint-hold-progress 3s linear forwards}}

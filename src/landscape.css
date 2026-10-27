@@ -29,11 +29,11 @@
 .landscape-layout .player-profile>.badge-emblem {width:28px;height:32px;flex-shrink:0}
 .landscape-layout .player-details {width:auto;flex:1;gap:3px}
 .landscape-layout .player-title {gap:4px}
-.landscape-layout .player-title b {font-size:10px}
-.landscape-layout .player-title>span {font-size:9px}
+.landscape-layout .player-title b {font-size:var(--text-10,10px)}
+.landscape-layout .player-title>span {font-size:var(--text-9,9px)}
 .landscape-layout .player-details>small {display:none}
 .landscape-layout .player-xp-track {height:3px}
-.landscape-layout .mobile-meta {display:grid;grid-template-columns:1fr 1fr;align-items:center;gap:4px;margin:0;width:100%;font:11px ui-monospace,SFMono-Regular,monospace;font-variant-numeric:tabular-nums;color:#d4ddc7}
+.landscape-layout .mobile-meta {display:grid;grid-template-columns:1fr 1fr;align-items:center;gap:4px;margin:0;width:100%;font:var(--text-11,11px) ui-monospace,SFMono-Regular,monospace;font-variant-numeric:tabular-nums;color:#d4ddc7}
 .landscape-layout .mobile-meta button {padding:5px 0}
 .landscape-layout .mobile-deal {grid-column:1 / -1;flex-direction:row;justify-content:center;gap:6px}
 .landscape-layout .header-actions {display:none}
@@ -44,16 +44,16 @@
 .landscape-layout .footer {grid-column:1;grid-row:2;display:flex;flex-direction:column;min-height:0;padding:0;overflow-y:auto;scrollbar-width:none}
 .landscape-layout .footer::-webkit-scrollbar {display:none}
 .landscape-layout .toolbar {order:0;display:grid;grid-template-columns:1fr 1fr;width:100%;max-width:none;margin:0;padding:4px;gap:4px;border-radius:10px;box-shadow:none;flex-shrink:0}
-.landscape-layout .tool-button,.landscape-layout .toolbar .new-button {display:flex;flex:none;flex-direction:row;justify-content:center;align-items:center;min-width:0;min-height:var(--control-button-height);padding:8px 2px;gap:5px;font-size:10px;white-space:nowrap}
+.landscape-layout .tool-button,.landscape-layout .toolbar .new-button {display:flex;flex:none;flex-direction:row;justify-content:center;align-items:center;min-width:0;min-height:var(--control-button-height);padding:8px 2px;gap:5px;font-size:var(--text-10,10px);white-space:nowrap}
 .landscape-layout .toolbar .new-button {grid-column:auto;min-height:40px}
 .landscape-layout .toolbar .secondary-tool {display:none}
 .landscape-layout .tool-button svg,.landscape-layout .new-button svg {width:16px;height:16px}
 .landscape-layout .toolbar-divider {display:none}
-.landscape-layout .status-line {order:2;margin-top:6px;flex:0 1 48px;min-height:0;height:48px;padding:4px 2px;align-items:flex-start;font-size:10px;line-height:1.6;text-align:left;justify-content:flex-start;overflow-y:auto}
+.landscape-layout .status-line {order:2;margin-top:6px;flex:0 1 48px;min-height:0;height:48px;padding:4px 2px;align-items:flex-start;font-size:var(--text-10,10px);line-height:1.6;text-align:left;justify-content:flex-start;overflow-y:auto}
 .landscape-layout .status-line>span:last-child {display:block;white-space:normal;overflow-wrap:anywhere;min-width:0}
 .landscape-layout .status-line .status-dot {display:none}
 .landscape-layout .footer .board-notice,.landscape-layout .finish-notice {display:none}
-.landscape-layout .bottom-meta {order:1;display:flex;gap:5px;margin:8px 0 0;font-size:9px}
+.landscape-layout .bottom-meta {order:1;display:flex;gap:5px;margin:8px 0 0;font-size:var(--text-9,9px)}
 .landscape-layout .bottom-meta>span:first-child {display:none}
 .landscape-layout .progress {width:auto;flex:1}
 .landscape-layout .menu-list .mobile-menu-action {display:flex}

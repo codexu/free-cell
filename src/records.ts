@@ -32,7 +32,8 @@ export function winRun(stats: Stats, game: Game): Stats {
   if (game.special) {
     const challenge = game.special;
     const key = specialRecordKey(challenge);
-    const previous = stats.specials[key];
+    const saved = stats.specials[key];
+    const previous = saved?.version === challenge.version ? saved : undefined;
     const updated = upsert({ ...stats, ...winRewards(stats, game), completed: [...stats.completed, game.id],
       specials: { ...stats.specials, [key]: { ...challenge,
         bestMoves: previous ? Math.min(previous.bestMoves, game.moves) : game.moves,
@@ -44,8 +45,8 @@ export function winRun(stats: Stats, game: Game): Stats {
   if (game.endgame) {
     const date = game.endgame.date;
     const saved = stats.endgames[date];
-    // Version 1's four-card shortcut must not remain the best result for a
-    // version 2 puzzle with a different layout and completion requirement.
+    // A different generation version has a different layout and goal, so its
+    // best moves/time cannot be compared with this puzzle's result.
     const previous = (saved?.version ?? 1) === game.endgame.version ? saved : undefined;
     const updated = upsert({ ...stats, ...winRewards(stats, game), completed: [...stats.completed, game.id],
       endgames: { ...stats.endgames, [date]: { version: game.endgame.version, kind: game.endgame.kind,

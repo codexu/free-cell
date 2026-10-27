@@ -34,7 +34,7 @@ export function PixiBoard({ motion, ...state }: PixiBoardState & { motion: PixiM
         return card && <button key={`${source.kind}-${source.index}-${source.offset}`} disabled={state.disabled || motion.busy} onClick={() => state.onCard(source)}>{cardName(card)}，{source.kind === 'column' ? `第 ${source.index + 1} 列` : source.kind === 'cell' ? `中转格 ${source.index + 1}` : '收牌区'}</button>;
       })}
       {(['column', 'cell', 'foundation'] as const).flatMap(kind => Array.from({ length: kind === 'column' ? 8 : 4 }, (_, index) => <button key={`${kind}-${index}`} disabled={state.disabled || motion.busy || (kind === 'cell' && state.board.rules?.kind === 'three-cells' && index === 3)} onClick={() => state.onTarget({ kind, index })}>{kind === 'cell' && state.board.rules?.kind === 'three-cells' && index === 3 ? '第四个中转格已封印' : <>移到{kind === 'column' ? '第' : kind === 'cell' ? '中转格' : '收牌区'} {index + 1}{kind === 'column' && '列'}</>}</button>))}
-      <button onClick={state.onBlank}>取消选择</button>
+      <button disabled={state.disabled || motion.busy} onClick={state.onBlank}>取消选择</button>
     </div>
   </div>;
 }

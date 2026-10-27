@@ -2,11 +2,11 @@ import { useLayoutEffect, useRef, useState } from 'react';
 import { BadgeEmblem } from './BadgeEmblem';
 import { LEVEL_TIERS } from './progression';
 
-const VISIBLE = Math.min(5, LEVEL_TIERS.length);
-const lastStart = LEVEL_TIERS.length - VISIBLE;
-const firstFor = (tier: number) => Math.max(0, Math.min(tier - 2, lastStart));
-
-export function BadgeCarousel({ currentTier, level }: { currentTier: number; level: number }) {
+export function BadgeCarousel({ currentTier, level, visibleCount = 5 }: { currentTier: number; level: number; visibleCount?: number }) {
+  const visible = Math.min(visibleCount, LEVEL_TIERS.length);
+  const center = Math.floor(visible / 2);
+  const lastStart = LEVEL_TIERS.length - visible;
+  const firstFor = (tier: number) => Math.max(0, Math.min(tier - center, lastStart));
   const viewport = useRef<HTMLDivElement>(null);
   const [active, setActive] = useState(currentTier);
   const activeRef = useRef(currentTier);
@@ -17,15 +17,15 @@ export function BadgeCarousel({ currentTier, level }: { currentTier: number; lev
     const next = Math.max(0, Math.min(LEVEL_TIERS.length - 1, tier));
     focus(next);
     const node = viewport.current;
-    node?.scrollTo({ left: firstFor(next) * node.clientWidth / VISIBLE, behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
+    node?.scrollTo({ left: firstFor(next) * node.clientWidth / visible, behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
   };
   const updateFocus = () => {
     const node = viewport.current;
     if (!node || !node.clientWidth) return;
-    const first = Math.max(0, Math.min(lastStart, Math.round(node.scrollLeft / (node.clientWidth / VISIBLE))));
+    const first = Math.max(0, Math.min(lastStart, Math.round(node.scrollLeft / (node.clientWidth / visible))));
     // At either end keep the first/last selected rank visible without padding.
     const previous = activeRef.current;
-    focus(first === 0 && previous < 2 ? previous : first === lastStart && previous >= LEVEL_TIERS.length - 2 ? previous : first + 2);
+    focus(first === 0 && previous < center ? previous : first === lastStart && previous >= LEVEL_TIERS.length - center ? previous : first + center);
   };
   useLayoutEffect(() => {
     const node = viewport.current!;
@@ -34,12 +34,12 @@ export function BadgeCarousel({ currentTier, level }: { currentTier: number; lev
     const align = () => {
       if (!node.clientWidth || node.clientWidth === width) return;
       width = node.clientWidth;
-      node.scrollLeft = firstFor(activeRef.current) * width / VISIBLE;
+      node.scrollLeft = firstFor(activeRef.current) * width / visible;
     };
     align();
     const observer = new ResizeObserver(align); observer.observe(node);
     return () => { observer.disconnect(); if (settle.current) clearTimeout(settle.current); };
-  }, [currentTier]);
+  }, [currentTier, visible]);
   return <section className="badge-carousel" aria-label="等级徽章轮播" aria-roledescription="轮播">
     <div className="badge-carousel-items" ref={viewport} tabIndex={0} role="group" aria-label="左右滑动浏览等级徽章" onKeyDown={event => {
       if (event.key === 'ArrowLeft' || event.key === 'ArrowRight') { event.preventDefault(); navigate(activeRef.current + (event.key === 'ArrowLeft' ? -1 : 1)); }
@@ -58,7 +58,7 @@ export function BadgeCarousel({ currentTier, level }: { currentTier: number; lev
       if (mouse.current?.pointer !== event.pointerId) return;
       mouse.current = null; delete event.currentTarget.dataset.dragging;
       if (event.currentTarget.hasPointerCapture(event.pointerId)) event.currentTarget.releasePointerCapture(event.pointerId);
-      const step = event.currentTarget.clientWidth / VISIBLE;
+      const step = event.currentTarget.clientWidth / visible;
       event.currentTarget.scrollTo({ left: Math.round(event.currentTarget.scrollLeft / step) * step, behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
       updateFocus();
     }} onLostPointerCapture={event => { mouse.current = null; delete event.currentTarget.dataset.dragging; }} onPointerCancel={event => { mouse.current = null; delete event.currentTarget.dataset.dragging; }}>
